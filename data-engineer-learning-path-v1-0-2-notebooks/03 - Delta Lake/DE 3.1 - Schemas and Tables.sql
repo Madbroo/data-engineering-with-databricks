@@ -224,6 +224,10 @@ DROP TABLE managed_table_in_db_with_custom_location;
 
 -- COMMAND ----------
 
+SHOW SCHEMAS
+
+-- COMMAND ----------
+
 -- MAGIC %md
 -- MAGIC
 -- MAGIC  
@@ -236,7 +240,9 @@ DROP TABLE managed_table_in_db_with_custom_location;
 
 USE ${da.schema_name}_default_location;
 
-CREATE OR REPLACE TEMPORARY VIEW temp_delays USING CSV OPTIONS (
+CREATE OR REPLACE TEMPORARY VIEW temp_delays 
+USING CSV 
+OPTIONS (
   path = '${da.paths.datasets}/flights/departuredelays.csv',
   header = "true",
   mode = "FAILFAST" -- abort file parsing with a RuntimeException if any malformed lines are encountered

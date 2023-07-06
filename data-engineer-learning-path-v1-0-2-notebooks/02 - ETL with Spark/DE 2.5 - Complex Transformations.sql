@@ -163,7 +163,7 @@ DESCRIBE exploded_events
 
 -- MAGIC %md
 -- MAGIC The code below combines array transformations to create a table that shows the unique collection of actions and the items in a user's cart.
--- MAGIC - **`collect_set()`** collects unique values for a field, including fields within arrays.
+-- MAGIC - **`collect_set()`** collects **unique values** for a field, including fields within arrays.
 -- MAGIC - **`flatten()`** combines multiple arrays into a single array.
 -- MAGIC - **`array_distinct()`** removes duplicate elements from an array.
 

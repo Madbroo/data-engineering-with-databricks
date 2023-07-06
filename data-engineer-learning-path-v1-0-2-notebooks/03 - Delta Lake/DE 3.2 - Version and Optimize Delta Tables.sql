@@ -92,6 +92,10 @@ WHEN NOT MATCHED AND u.type = "insert"
 
 -- COMMAND ----------
 
+SELECT * FROM students
+
+-- COMMAND ----------
+
 -- MAGIC %md
 -- MAGIC
 -- MAGIC
@@ -140,6 +144,8 @@ DESCRIBE DETAIL students
 
 -- MAGIC %python
 -- MAGIC display(dbutils.fs.ls(f"{DA.paths.user_db}/students"))
+-- MAGIC # this returns the same:
+-- MAGIC # display(dbutils.fs.ls("dbfs:/mnt/dbacademy-users/mehdi.darshi@adesso.de/data-engineer-learning-path/database.db/students"))
 
 -- COMMAND ----------
 
@@ -266,6 +272,11 @@ FROM students VERSION AS OF 3
 
 -- COMMAND ----------
 
+SELECT *
+FROM students TIMESTAMP AS OF '2023-07-04T11:32:10.000+0000'
+
+-- COMMAND ----------
+
 -- MAGIC %md
 -- MAGIC
 -- MAGIC
@@ -310,6 +321,10 @@ RESTORE TABLE students TO VERSION AS OF 8
 
 -- COMMAND ----------
 
+DESCRIBE HISTORY students;
+
+-- COMMAND ----------
+
 -- MAGIC %md
 -- MAGIC
 -- MAGIC
@@ -324,7 +339,7 @@ RESTORE TABLE students TO VERSION AS OF 8
 -- MAGIC
 -- MAGIC Databricks will automatically clean up stale files in Delta Lake tables.
 -- MAGIC
--- MAGIC While Delta Lake versioning and time travel are great for querying recent versions and rolling back queries, keeping the data files for all versions of large production tables around indefinitely is very expensive (and can lead to compliance issues if PII is present).
+-- MAGIC While Delta Lake versioning and time travel are great for querying recent versions and rolling back queries, keeping the data files for all versions of large production tables around indefinitely is very expensive (and can lead to compliance issues if **PII** (Personal Identifiable Information) is present).
 -- MAGIC
 -- MAGIC If you wish to manually purge old data files, this can be performed with the **`VACUUM`** operation.
 -- MAGIC
@@ -332,7 +347,7 @@ RESTORE TABLE students TO VERSION AS OF 8
 
 -- COMMAND ----------
 
--- VACUUM students RETAIN 0 HOURS
+VACUUM students RETAIN 0 HOURS
 
 -- COMMAND ----------
 
@@ -355,6 +370,10 @@ VACUUM students RETAIN 0 HOURS DRY RUN
 
 -- COMMAND ----------
 
+DESCRIBE HISTORY students
+
+-- COMMAND ----------
+
 -- MAGIC %md
 -- MAGIC
 -- MAGIC
@@ -363,6 +382,10 @@ VACUUM students RETAIN 0 HOURS DRY RUN
 -- COMMAND ----------
 
 VACUUM students RETAIN 0 HOURS
+
+-- COMMAND ----------
+
+DESCRIBE HISTORY students
 
 -- COMMAND ----------
 
@@ -375,6 +398,12 @@ VACUUM students RETAIN 0 HOURS
 
 -- MAGIC %python
 -- MAGIC display(dbutils.fs.ls(f"{DA.paths.user_db}/students"))
+
+-- COMMAND ----------
+
+-- Now we will no longer able to do time travel and the following code raises an error
+SELECT *
+FROM students VERSION AS OF 3
 
 -- COMMAND ----------
 

@@ -58,14 +58,20 @@ DESCRIBE EXTENDED sales;
 
 -- COMMAND ----------
 
+SELECT *
+FROM sales
+
+-- COMMAND ----------
+
 -- MAGIC %md
 -- MAGIC
 -- MAGIC  
--- MAGIC CTAS statements automatically infer schema information from query results and do **not** support manual schema declaration. 
+-- MAGIC **NOTE:** 
+-- MAGIC * CTAS statements automatically infer schema information from query results and do **not** support manual schema declaration. 
 -- MAGIC
--- MAGIC This means that CTAS statements are useful for external data ingestion from sources with well-defined schema, such as Parquet files and tables.
+-- MAGIC * This means that CTAS statements are useful for external data ingestion from **sources with well-defined schema**, such as Parquet files and tables.
 -- MAGIC
--- MAGIC CTAS statements also do not support specifying additional file options.
+-- MAGIC * CTAS statements also do **not** support specifying additional file options.
 -- MAGIC
 -- MAGIC We can see how this would present significant limitations when trying to ingest data from CSV files.
 
@@ -198,18 +204,22 @@ SELECT * FROM purchase_dates
 
 -- COMMAND ----------
 
+DESCRIBE EXTENDED purchase_dates 
+
+-- COMMAND ----------
+
 -- MAGIC %md
 -- MAGIC
 -- MAGIC
--- MAGIC
--- MAGIC It's important to note that if a field that would otherwise be generated is included in an insert to a table, this insert will fail if the value provided does not exactly match the value that would be derived by the logic used to define the generated column.
+-- MAGIC **NOTE:** 
+-- MAGIC It's important to note that if a field that would otherwise be generated is included in an insert to a table, this *insert will fail **if the value provided does not exactly match** the value that would be derived by the logic used to define the generated column.*
 -- MAGIC
 -- MAGIC We can see this error by uncommenting and running the cell below:
 
 -- COMMAND ----------
 
--- INSERT INTO purchase_dates VALUES
--- (1, 600000000, 42.0, "2020-06-18")
+INSERT INTO purchase_dates VALUES
+(1, 600000000, 42.0, "2020-06-18")
 
 -- COMMAND ----------
 
@@ -328,6 +338,14 @@ DESCRIBE EXTENDED users_pii
 
 CREATE OR REPLACE TABLE purchases_clone
 DEEP CLONE purchases
+
+-- COMMAND ----------
+
+DROP TABLE purchases
+
+-- COMMAND ----------
+
+SELECT * FROM purchases_clone
 
 -- COMMAND ----------
 

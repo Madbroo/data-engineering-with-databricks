@@ -103,8 +103,8 @@ DESCRIBE HISTORY sales
 
 -- MAGIC %md
 -- MAGIC
--- MAGIC
--- MAGIC A primary difference here has to do with how Delta Lake enforces schema on write.
+-- MAGIC **NOTE:**<br>
+-- MAGIC A primary difference here has to do with how Delta Lake **enforces schema on write**.
 -- MAGIC
 -- MAGIC Whereas a CRAS statement will allow us to completely redefine the contents of our target table, **`INSERT OVERWRITE`** will fail if we try to change our schema (unless we provide optional settings). 
 -- MAGIC
@@ -112,8 +112,8 @@ DESCRIBE HISTORY sales
 
 -- COMMAND ----------
 
--- INSERT OVERWRITE sales
--- SELECT *, current_timestamp() FROM parquet.`${da.paths.datasets}/ecommerce/raw/sales-historical`
+INSERT OVERWRITE sales
+SELECT *, current_timestamp() FROM parquet.`${da.paths.datasets}/ecommerce/raw/sales-historical`
 
 -- COMMAND ----------
 
@@ -137,7 +137,7 @@ SELECT * FROM parquet.`${da.paths.datasets}/ecommerce/raw/sales-30m`
 -- MAGIC %md
 -- MAGIC
 -- MAGIC
--- MAGIC
+-- MAGIC **NOTE:**<br>
 -- MAGIC Note that **`INSERT INTO`** does not have any built-in guarantees to prevent inserting the same records multiple times. Re-executing the above cell would write the same records to the target table, resulting in duplicate records.
 
 -- COMMAND ----------
@@ -226,7 +226,7 @@ WHEN NOT MATCHED AND b.traffic_source = 'email' THEN
 -- MAGIC  
 -- MAGIC ## Load Incrementally
 -- MAGIC
--- MAGIC **`COPY INTO`** provides SQL engineers an idempotent option to incrementally ingest data from external systems.
+-- MAGIC **`COPY INTO`** provides SQL engineers an idempotent option to incrementally ingest data from external systems, meaning that if it is run twice on the same dataset, the second run has no effect.
 -- MAGIC
 -- MAGIC Note that this operation does have some expectations:
 -- MAGIC - Data schema should be consistent

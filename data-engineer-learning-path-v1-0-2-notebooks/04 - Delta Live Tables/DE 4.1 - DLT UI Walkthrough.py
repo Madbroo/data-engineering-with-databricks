@@ -13,7 +13,7 @@
 # MAGIC This demo will explore the DLT UI. By the end of this lesson you will be able to: 
 # MAGIC
 # MAGIC * Deploy a DLT pipeline
-# MAGIC * Explore the resultant DAG
+# MAGIC * Explore the resultant DAG (Directed Acyclic Graph)
 # MAGIC * Execute an update of the pipeline
 
 # COMMAND ----------
@@ -38,8 +38,8 @@
 
 # COMMAND ----------
 
-#pipeline_language = "SQL"
-pipeline_language = "Python"
+pipeline_language = "SQL"
+# pipeline_language = "Python"
 
 DA.print_pipeline_config(pipeline_language)
 

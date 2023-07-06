@@ -12,9 +12,9 @@
 -- MAGIC
 -- MAGIC # Reshaping Data Lab
 -- MAGIC
--- MAGIC In this lab, you will create a **`clickpaths`** table that aggregates the number of times each user took a particular action in **`events`** and then join this information with a flattened view of **`transactions`** to create a record of each user's actions and final purchases.
+-- MAGIC In this lab, you will create a **`clickpaths`** table that aggregates the number of times each user took a particular action in **`events`** and then join this information with a flattened view of **`transactions`**. There should be one record per user containing the total number of times each user completed an event type as well as the total quantity purchased for each item.
 -- MAGIC
--- MAGIC The **`clickpaths`** table should contain all the fields from **`transactions`**, as well as a count of every **`event_name`** from **`events`** in its own column. This table should contain a single row for each user that completed a purchase.
+-- MAGIC The **`clickpaths`** table should contain all the fields from **`transactions`**, as well as a count of every **`event_name`** from **`events`** in its own column. 
 -- MAGIC
 -- MAGIC ## Learning Objectives
 -- MAGIC By the end of this lab, you should be able to:
@@ -94,12 +94,27 @@
 
 -- COMMAND ----------
 
+SELECT DISTINCT event_name
+FROM events
+
+-- COMMAND ----------
+
+
+
+-- COMMAND ----------
+
 -- TODO
 CREATE OR REPLACE VIEW events_pivot
-<FILL_IN>
-("cart", "pillows", "login", "main", "careers", "guest", "faq", "down", "warranty", "finalize", 
-"register", "shipping_info", "checkout", "mattresses", "add_item", "press", "email_coupon", 
-"cc_info", "foam", "reviews", "original", "delivery", "premium")
+-- SOLUTION
+AS
+SELECT * FROM (
+  SELECT user_id AS user, event_name
+  FROM events)
+  PIVOT( count(*) FOR event_name IN (
+    "cart", "pillows", "login", "main", "careers", "guest", "faq", "down", "warranty", "finalize", 
+    "register", "shipping_info", "checkout", "mattresses", "add_item", "press", "email_coupon", 
+    "cc_info", "foam", "reviews", "original", "delivery", "premium")
+  )
 
 -- COMMAND ----------
 
@@ -110,7 +125,11 @@ CREATE OR REPLACE VIEW events_pivot
 -- MAGIC %python
 -- MAGIC # TODO
 -- MAGIC (spark.read
--- MAGIC     <FILL_IN>
+-- MAGIC     .table("events")
+-- MAGIC     .groupBy("user_id")
+-- MAGIC     .pivot("event_name")
+-- MAGIC     .count()
+-- MAGIC     .withColumnRenamed("user_id", "user")
 -- MAGIC     .createOrReplaceTempView("events_pivot"))
 
 -- COMMAND ----------
@@ -166,8 +185,12 @@ CREATE OR REPLACE VIEW events_pivot
 -- COMMAND ----------
 
 -- TODO
-CREATE OR REPLACE VIEW clickpaths AS
-<FILL_IN>
+CREATE OR REPLACE TEMP VIEW clickpaths AS
+SELECT *
+FROM events_pivot AS p
+JOIN transactions AS t
+    on p.user = t.user_id
+
 
 -- COMMAND ----------
 
@@ -177,8 +200,11 @@ CREATE OR REPLACE VIEW clickpaths AS
 
 -- MAGIC %python
 -- MAGIC # TODO
+-- MAGIC ## Solution ##
+-- MAGIC from pyspark.sql.functions import col
 -- MAGIC (spark.read
--- MAGIC     <FILL_IN>
+-- MAGIC     .table("events_pivot")
+-- MAGIC     .join(spark.table("transactions"), col("events_pivot.user") == col("transactions.user_id"), "inner")
 -- MAGIC     .createOrReplaceTempView("clickpaths"))
 
 -- COMMAND ----------

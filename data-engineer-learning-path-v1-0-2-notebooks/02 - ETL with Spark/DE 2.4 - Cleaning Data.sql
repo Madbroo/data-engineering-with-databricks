@@ -60,6 +60,10 @@
 
 -- COMMAND ----------
 
+DESCRIBE EXTENDED users_dirty
+
+-- COMMAND ----------
+
 SELECT count(*), count(user_id), count(user_first_touch_timestamp), count(email), count(updated)
 FROM users_dirty
 
@@ -81,7 +85,7 @@ FROM users_dirty
 
 -- COMMAND ----------
 
-SELECT count_if(email IS NULL) FROM users_dirty;
+-- SELECT count_if(email IS NULL) FROM users_dirty;
 SELECT count(*) FROM users_dirty WHERE email IS NULL;
 
 -- COMMAND ----------
@@ -176,6 +180,12 @@ WHERE user_id IS NOT NULL
 
 -- COMMAND ----------
 
+SELECT user_id, count(*) AS row_count
+  FROM deduped_users
+  GROUP BY user_id
+
+-- COMMAND ----------
+
 SELECT max(row_count) <= 1 no_duplicate_ids FROM (
   SELECT user_id, count(*) AS row_count
   FROM deduped_users
@@ -229,6 +239,10 @@ SELECT max(user_id_count) <= 1 at_most_one_id FROM (
 -- MAGIC - Correctly scales and casts the **`user_first_touch_timestamp`** to a valid timestamp
 -- MAGIC - Extracts the calendar date and clock time for this timestamp in human readable format
 -- MAGIC - Uses **`regexp_extract`** to extract the domains from the email column using regex
+
+-- COMMAND ----------
+
+SELECT * FROM deduped_users
 
 -- COMMAND ----------
 
