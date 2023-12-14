@@ -211,6 +211,10 @@ JOIN transactions b
 
 -- COMMAND ----------
 
+select * from clickpaths
+
+-- COMMAND ----------
+
 -- DBTITLE 0,--i18n-ac19c8e1-0ab9-4558-a0eb-a6c954e84167
 -- MAGIC %md
 -- MAGIC

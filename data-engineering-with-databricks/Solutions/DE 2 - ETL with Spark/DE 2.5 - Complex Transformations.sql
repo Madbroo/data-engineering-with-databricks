@@ -249,7 +249,7 @@ SELECT * FROM item_purchases
 
 -- COMMAND ----------
 
--- MAGIC %md --i18n-6c1f0e6f-c4f0-4b86-bf02-783160ea00f7
+-- MAGIC %md 
 -- MAGIC ### Pivot Tables
 -- MAGIC
 -- MAGIC We can use **`PIVOT`** to view data from different perspectives by rotating unique values in a specified pivot column into multiple columns based on an aggregate function.

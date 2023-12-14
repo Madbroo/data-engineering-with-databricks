@@ -20,7 +20,7 @@ DA.conclude_setup()
 # COMMAND ----------
 
 # TODO
-my_name = None
+my_name = 'Mehdi Darshi a Data Engineer at adesso SE'
 
 # COMMAND ----------
 

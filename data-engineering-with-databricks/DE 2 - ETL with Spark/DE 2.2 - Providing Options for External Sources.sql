@@ -73,7 +73,7 @@ SELECT * FROM csv.`${DA.paths.sales_csv}`
 -- MAGIC
 -- MAGIC While Spark will extract some self-describing data sources efficiently using default settings, many formats will require declaration of schema or other options.
 -- MAGIC
--- MAGIC While there are many <a href="https://docs.databricks.com/spark/latest/spark-sql/language-manual/sql-ref-syntax-ddl-create-table-using.html" target="_blank">additional configurations</a> you can set while creating tables against external sources, the syntax below demonstrates the essentials required to extract data from most formats.
+-- MAGIC While there are many <a href="https://learn.microsoft.com/en-us/azure/databricks/sql/language-manual/sql-ref-syntax-ddl-create-table-using" target="_blank">additional configurations</a> you can set while creating tables against external sources, the syntax below demonstrates the essentials required to extract data from most formats.
 -- MAGIC
 -- MAGIC <strong><code>
 -- MAGIC CREATE TABLE table_identifier (col_name1 col_type1, ...)<br/>
@@ -82,7 +82,7 @@ SELECT * FROM csv.`${DA.paths.sales_csv}`
 -- MAGIC LOCATION = path<br/>
 -- MAGIC </code></strong>
 -- MAGIC
--- MAGIC Note that options are passed with keys as unquoted text and values in quotes. Spark supports many <a href="https://docs.databricks.com/data/data-sources/index.html" target="_blank">data sources</a> with custom options, and additional systems may have unofficial support through external <a href="https://docs.databricks.com/libraries/index.html" target="_blank">libraries</a>. 
+-- MAGIC Note that options are passed with keys as unquoted text and values in quotes. Spark supports many <a href="https://learn.microsoft.com/en-us/azure/databricks/external-data/" target="_blank">data sources</a> with custom options, and additional systems may have unofficial support through external <a href="https://docs.databricks.com/libraries/index.html" target="_blank">libraries</a>. 
 -- MAGIC
 -- MAGIC **NOTE**: Depending on your workspace settings, you may need administrator assistance to load libraries and configure the requisite security settings for some data sources.
 
@@ -156,7 +156,7 @@ SELECT COUNT(*) FROM sales_csv
 -- MAGIC %md
 -- MAGIC
 -- MAGIC
--- MAGIC All the metadata and options passed during table declaration will be persisted to the metastore, ensuring that data in the location will always be read with these options.
+-- MAGIC All the metadata and options passed during table declaration will be persisted to the **metastore**, ensuring that data in the location will always be read with these options.
 -- MAGIC
 -- MAGIC **NOTE**: When working with CSVs as a data source, it's important to ensure that column order does not change if additional data files will be added to the source directory. Because the data format does not have strong schema enforcement, Spark will load columns and apply column names and data types in the order specified during table declaration.
 -- MAGIC
@@ -168,15 +168,19 @@ DESCRIBE EXTENDED sales_csv
 
 -- COMMAND ----------
 
+DESCRIBE sales_csv
+
+-- COMMAND ----------
+
 -- DBTITLE 0,--i18n-fdbb45bc-72b3-4610-97a6-accd30ec8fec
 -- MAGIC %md
 -- MAGIC
 -- MAGIC
 -- MAGIC ## Limits of Tables with External Data Sources
 -- MAGIC
--- MAGIC If you've taken other courses on Databricks or reviewed any of our company literature, you may have heard about Delta Lake and the Lakehouse. Note that whenever we're defining tables or queries against external data sources, we **cannot** expect the performance guarantees associated with Delta Lake and Lakehouse.
+-- MAGIC If you've taken other courses on Databricks or reviewed any of our company literature, you may have heard about **`Delta Lake`** and the **`Lakehouse`**. Note that whenever we're defining tables or queries against external data sources, we **cannot** expect the performance guarantees associated with Delta Lake and Lakehouse.
 -- MAGIC
--- MAGIC For example: while Delta Lake tables will guarantee that you always query the most recent version of your source data, tables registered against other data sources may represent older cached versions.
+-- MAGIC **For example:** while **`Delta Lake`** tables will guarantee that you always query the **most recent version** of your source data, tables registered against other data sources may represent older cached versions.
 -- MAGIC
 -- MAGIC The cell below executes some logic that we can think of as just representing an external system directly updating the files underlying our table.
 
@@ -266,7 +270,7 @@ SELECT COUNT(*) FROM sales_csv
 DROP TABLE IF EXISTS users_jdbc;
 
 CREATE TABLE users_jdbc
-USING JDBC
+USING JDBC    --or: org.apache.spark.sql.jdbc
 OPTIONS (
   url = "jdbc:sqlite:${DA.paths.ecommerce_db}",
   dbtable = "users"
@@ -322,8 +326,7 @@ DESCRIBE EXTENDED users_jdbc
 -- DBTITLE 0,--i18n-1cb11f07-755c-4fb2-a122-1eb340033712
 -- MAGIC %md
 -- MAGIC
--- MAGIC
--- MAGIC Note that some SQL systems such as data warehouses will have custom drivers. Spark will interact with various external databases differently, but the two basic approaches can be summarized as either:
+-- MAGIC **Note** that some SQL systems such as data warehouses will have custom drivers. Spark will interact with various external databases differently, but the two basic approaches can be summarized as either:
 -- MAGIC 1. Moving the entire source table(s) to Databricks and then executing logic on the currently active cluster
 -- MAGIC 1. Pushing down the query to the external SQL database and only transferring the results back to Databricks
 -- MAGIC

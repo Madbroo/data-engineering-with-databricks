@@ -174,6 +174,10 @@ display(files)
 
 # COMMAND ----------
 
+dbutils.fs.help("mount")
+
+# COMMAND ----------
+
 # DBTITLE 0,--i18n-c31a3318-a114-46e8-a744-18e8f8aa071e
 # MAGIC %md
 # MAGIC

@@ -73,8 +73,35 @@
 
 -- COMMAND ----------
 
+--SELECT * FROM JSON.`${DA.paths.kafka_events}`
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC <strong><code>
+-- MAGIC CREATE TABLE table_identifier (col_name1 col_type1, ...)<br/>
+-- MAGIC USING data_source <br/>
+-- MAGIC OPTIONS (key1 = val1, key2 = val2, ...) <br/>
+-- MAGIC LOCATION = path <br/>
+-- MAGIC </code></strong>
+
+-- COMMAND ----------
+
+
+
+-- COMMAND ----------
+
 -- TODO
-<FILL_IN> "${DA.paths.kafka_events}" 
+DROP table if exists events_json;
+
+CREATE TABLE IF NOT EXISTS events_json
+(key BINARY, offset LONG, partition INTEGER, timestamp LONG, topic STRING, value BINARY)
+USING JSON
+LOCATION "${DA.paths.kafka_events}" ;
+
+-- COMMAND ----------
+
+describe extended events_json
 
 -- COMMAND ----------
 

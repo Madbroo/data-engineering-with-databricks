@@ -52,7 +52,8 @@
 
 -- COMMAND ----------
 
-CREATE OR REPLACE TEMP VIEW events_strings AS 
+CREATE OR REPLACE TEMP VIEW events_strings 
+AS 
 SELECT string(key), string(value) FROM events_raw;
 
 SELECT * FROM events_strings
@@ -61,12 +62,11 @@ SELECT * FROM events_strings
 
 -- MAGIC %python
 -- MAGIC from pyspark.sql.functions import col
--- MAGIC
 -- MAGIC events_stringsDF = (spark
--- MAGIC     .table("events_raw")
--- MAGIC     .select(col("key").cast("string"), 
--- MAGIC             col("value").cast("string"))
--- MAGIC     )
+-- MAGIC                     .table("events_raw")
+-- MAGIC                     .select(col("key").cast("string"),
+-- MAGIC                             col("value").cast("string"))
+-- MAGIC                     )
 -- MAGIC display(events_stringsDF)
 
 -- COMMAND ----------
@@ -118,9 +118,10 @@ SELECT schema_of_json('{"device":"Linux","ecommerce":{"purchase_revenue_in_usd":
 
 -- COMMAND ----------
 
-CREATE OR REPLACE TEMP VIEW parsed_events AS SELECT json.* FROM (
-SELECT from_json(value, 'STRUCT<device: STRING, ecommerce: STRUCT<purchase_revenue_in_usd: DOUBLE, total_item_quantity: BIGINT, unique_items: BIGINT>, event_name: STRING, event_previous_timestamp: BIGINT, event_timestamp: BIGINT, geo: STRUCT<city: STRING, state: STRING>, items: ARRAY<STRUCT<coupon: STRING, item_id: STRING, item_name: STRING, item_revenue_in_usd: DOUBLE, price_in_usd: DOUBLE, quantity: BIGINT>>, traffic_source: STRING, user_first_touch_timestamp: BIGINT, user_id: STRING>') AS json 
-FROM events_strings);
+CREATE OR REPLACE TEMP VIEW parsed_events AS 
+SELECT json.* FROM (
+  SELECT from_json(value, 'STRUCT<device: STRING, ecommerce: STRUCT<purchase_revenue_in_usd: DOUBLE, total_item_quantity: BIGINT, unique_items: BIGINT>, event_name: STRING, event_previous_timestamp: BIGINT, event_timestamp: BIGINT, geo: STRUCT<city: STRING, state: STRING>, items: ARRAY<STRUCT<coupon: STRING, item_id: STRING, item_name: STRING, item_revenue_in_usd: DOUBLE, price_in_usd: DOUBLE, quantity: BIGINT>>, traffic_source: STRING, user_first_touch_timestamp: BIGINT, user_id: STRING>') AS json 
+  FROM events_strings);
 
 SELECT * FROM parsed_events
 
@@ -153,6 +154,11 @@ SELECT * FROM parsed_events
 
 -- COMMAND ----------
 
+SELECT *, explode(items) AS item
+from parsed_events
+
+-- COMMAND ----------
+
 CREATE OR REPLACE TEMP VIEW exploded_events AS
 SELECT *, explode(items) AS item
 FROM parsed_events;
@@ -165,9 +171,8 @@ SELECT * FROM exploded_events WHERE size(items) > 2
 -- MAGIC from pyspark.sql.functions import explode, size
 -- MAGIC
 -- MAGIC exploded_eventsDF = (parsed_eventsDF
--- MAGIC     .withColumn("item", explode("items"))
--- MAGIC )
--- MAGIC
+-- MAGIC                      .withColumn("item", explode("items"))
+-- MAGIC                     )
 -- MAGIC display(exploded_eventsDF.where(size("items") > 2))
 
 -- COMMAND ----------
@@ -179,29 +184,33 @@ DESCRIBE exploded_events
 -- DBTITLE 0,--i18n-0810444d-1ce9-4cb7-9ba9-f4596e84d895
 -- MAGIC %md
 -- MAGIC The code below combines array transformations to create a table that shows the unique collection of actions and the items in a user's cart.
--- MAGIC - **`collect_set()`** collects unique values for a field, including fields within arrays.
--- MAGIC - **`flatten()`** combines multiple arrays into a single array.
--- MAGIC - **`array_distinct()`** removes duplicate elements from an array.
+-- MAGIC - [**`collect_set()`**](https://learn.microsoft.com/en-us/azure/databricks/sql/language-manual/functions/collect_set) collects unique values for a field, including fields within arrays.
+-- MAGIC - [**`flatten()`**](https://learn.microsoft.com/en-us/azure/databricks/sql/language-manual/functions/flatten) combines multiple arrays into a single array.
+-- MAGIC - [**`array_distinct()`**](https://learn.microsoft.com/en-us/azure/databricks/sql/language-manual/functions/array_distinct) removes duplicate elements from an array.
+
+-- COMMAND ----------
+
+SELECT *
+FROM exploded_events
 
 -- COMMAND ----------
 
 SELECT user_id,
-  collect_set(event_name) AS event_history,
-  array_distinct(flatten(collect_set(items.item_id))) AS cart_history
+  collect_set(event_name) AS event_history, -- returns all unique events for each user_id
+  array_distinct(flatten(collect_set(items.item_id))) AS cart_history -- returns all unique items
 FROM exploded_events
 GROUP BY user_id
 
 -- COMMAND ----------
 
 -- MAGIC %python
--- MAGIC
 -- MAGIC from pyspark.sql.functions import array_distinct, collect_set, flatten
 -- MAGIC
 -- MAGIC display(exploded_eventsDF
--- MAGIC     .groupby("user_id")
--- MAGIC     .agg(collect_set("event_name").alias("event_history"),
--- MAGIC             array_distinct(flatten(collect_set("items.item_id"))).alias("cart_history"))
--- MAGIC )
+-- MAGIC         .groupBy("user_id")
+-- MAGIC         .agg(collect_set("event_name").alias("event_history"),
+-- MAGIC              array_distinct(flatten(collect_set("items.item_id"))).alias("cart_history"))
+-- MAGIC         )
 
 -- COMMAND ----------
 
@@ -222,6 +231,14 @@ GROUP BY user_id
 
 -- COMMAND ----------
 
+SELECT *
+FROM (SELECT * , explode(items) AS item FROM sales) AS a
+INNER JOIN item_lookup AS b
+  ON a.item.item_id = b.item_id
+--item_lookup
+
+-- COMMAND ----------
+
 CREATE OR REPLACE TEMP VIEW item_purchases AS
 
 SELECT * 
@@ -235,21 +252,18 @@ SELECT * FROM item_purchases
 
 -- MAGIC %python
 -- MAGIC exploded_salesDF = (spark
--- MAGIC     .table("sales")
--- MAGIC     .withColumn("item", explode("items"))
--- MAGIC )
+-- MAGIC                     .table("sales")
+-- MAGIC                     .withColumn("item", explode("items"))
+-- MAGIC                   )
 -- MAGIC
 -- MAGIC itemsDF = spark.table("item_lookup")
--- MAGIC
--- MAGIC item_purchasesDF = (exploded_salesDF
--- MAGIC     .join(itemsDF, exploded_salesDF.item.item_id == itemsDF.item_id)
--- MAGIC )
+-- MAGIC item_purchasesDF = (exploded_salesDF.join(itemsDF, exploded_salesDF.item.item_id == itemsDF.item_id))
 -- MAGIC
 -- MAGIC display(item_purchasesDF)
 
 -- COMMAND ----------
 
--- MAGIC %md --i18n-6c1f0e6f-c4f0-4b86-bf02-783160ea00f7
+-- MAGIC %md 
 -- MAGIC ### Pivot Tables
 -- MAGIC
 -- MAGIC We can use **`PIVOT`** to view data from different perspectives by rotating unique values in a specified pivot column into multiple columns based on an aggregate function.
@@ -262,8 +276,7 @@ SELECT * FROM item_purchases
 
 SELECT *
 FROM item_purchases
-PIVOT (
-  sum(item.quantity) FOR item_id IN (
+PIVOT (sum(item.quantity) FOR item_id IN (
     'P_FOAM_K',
     'M_STAN_Q',
     'P_FOAM_S',
@@ -276,25 +289,25 @@ PIVOT (
     'M_PREM_T',
     'P_DOWN_S',
     'P_DOWN_K')
-)
+  )
 
 -- COMMAND ----------
 
 -- MAGIC %python
 -- MAGIC transactionsDF = (item_purchasesDF
--- MAGIC     .groupBy("order_id", 
--- MAGIC         "email",
--- MAGIC         "transaction_timestamp", 
--- MAGIC         "total_item_quantity", 
--- MAGIC         "purchase_revenue_in_usd", 
--- MAGIC         "unique_items",
--- MAGIC         "items",
--- MAGIC         "item",
--- MAGIC         "name",
--- MAGIC         "price")
--- MAGIC     .pivot("item_id")
--- MAGIC     .sum("item.quantity")
--- MAGIC )
+-- MAGIC                   .groupBy("order_id", 
+-- MAGIC                     "email",
+-- MAGIC                     "transaction_timestamp", 
+-- MAGIC                     "total_item_quantity", 
+-- MAGIC                     "purchase_revenue_in_usd", 
+-- MAGIC                     "unique_items",
+-- MAGIC                     "items",
+-- MAGIC                     "item",
+-- MAGIC                     "name",
+-- MAGIC                     "price")
+-- MAGIC                   .pivot("item_id")
+-- MAGIC                   .sum("item.quantity")
+-- MAGIC               )
 -- MAGIC display(transactionsDF)
 
 -- COMMAND ----------

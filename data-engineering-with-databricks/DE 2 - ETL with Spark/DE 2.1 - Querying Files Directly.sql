@@ -76,6 +76,16 @@
 
 -- COMMAND ----------
 
+-- MAGIC %python
+-- MAGIC display(dbutils.fs.ls(DA.paths.datasets))
+
+-- COMMAND ----------
+
+-- MAGIC %python
+-- MAGIC display(dbutils.fs.ls('dbfs:/mnt/dbacademy-datasets/data-engineer-learning-path/v02/ecommerce/raw/sales-csv'))
+
+-- COMMAND ----------
+
 -- DBTITLE 0,--i18n-f1ddfb40-9c95-4b9a-84e5-2958ac01166d
 -- MAGIC %md
 -- MAGIC
@@ -108,6 +118,10 @@ SELECT * FROM json.`${DA.paths.kafka_events}/001.json`
 
 -- COMMAND ----------
 
+SELECT * FROM csv.`dbfs:/mnt/dbacademy-datasets/data-engineer-learning-path/v02/ecommerce/raw/sales-csv/000.csv`
+
+-- COMMAND ----------
+
 -- DBTITLE 0,--i18n-5c2891f1-e055-4fde-8bf9-3f448e4cdb2b
 -- MAGIC %md
 -- MAGIC
@@ -127,6 +141,10 @@ SELECT * FROM json.`${DA.paths.kafka_events}/001.json`
 -- COMMAND ----------
 
 SELECT * FROM json.`${DA.paths.kafka_events}`
+
+-- COMMAND ----------
+
+SELECT * FROM csv.`dbfs:/mnt/dbacademy-datasets/data-engineer-learning-path/v02/ecommerce/raw/sales-csv`
 
 -- COMMAND ----------
 
@@ -210,7 +228,7 @@ SELECT * FROM cte_json
 
 -- COMMAND ----------
 
--- SELECT COUNT(*) FROM cte_json
+SELECT COUNT(*) FROM cte_json
 
 -- COMMAND ----------
 

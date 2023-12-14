@@ -132,25 +132,27 @@ SELECT DISTINCT(*) FROM users_dirty
 
 -- COMMAND ----------
 
-CREATE OR REPLACE TEMP VIEW deduped_users AS 
-SELECT user_id, user_first_touch_timestamp, max(email) AS email, max(updated) AS updated
+CREATE OR REPLACE TEMP VIEW deduped_users
+AS
+SELECT user_id, user_first_touch_timestamp, MAX(email) AS email, max(updated) AS updated
 FROM users_dirty
 WHERE user_id IS NOT NULL
 GROUP BY user_id, user_first_touch_timestamp;
 
-SELECT count(*) FROM deduped_users
+SELECT COUNT(*)
+FROM deduped_users
 
 -- COMMAND ----------
 
 -- MAGIC %python
--- MAGIC from pyspark.sql.functions import max
+-- MAGIC from pyspark.sql.functions import col, max
+-- MAGIC
 -- MAGIC dedupedDF = (usersDF
 -- MAGIC     .where(col("user_id").isNotNull())
--- MAGIC     .groupBy("user_id", "user_first_touch_timestamp")
--- MAGIC     .agg(max("email").alias("email"), 
--- MAGIC          max("updated").alias("updated"))
--- MAGIC     )
--- MAGIC
+-- MAGIC     .groupBy(col("user_id"), col("user_first_touch_timestamp"))
+-- MAGIC     .agg(max("email").alias("email"),
+-- MAGIC           max("updated").alias("updated"))
+-- MAGIC )
 -- MAGIC dedupedDF.count()
 
 -- COMMAND ----------
@@ -169,10 +171,12 @@ WHERE user_id IS NOT NULL
 -- COMMAND ----------
 
 -- MAGIC %python
+-- MAGIC
 -- MAGIC (usersDF
--- MAGIC     .dropDuplicates(["user_id", "user_first_touch_timestamp"])
--- MAGIC     .filter(col("user_id").isNotNull())
--- MAGIC     .count())
+-- MAGIC   .dropDuplicates(["user_id", "user_first_touch_timestamp"])
+-- MAGIC   .filter(col("user_id").isNotNull())
+-- MAGIC   .count()
+-- MAGIC )
 
 -- COMMAND ----------
 
@@ -188,7 +192,7 @@ WHERE user_id IS NOT NULL
 
 -- COMMAND ----------
 
-SELECT max(row_count) <= 1 no_duplicate_ids FROM (
+SELECT max(row_count) <= 1 AS no_duplicate_ids FROM (
   SELECT user_id, count(*) AS row_count
   FROM deduped_users
   GROUP BY user_id)
@@ -196,6 +200,7 @@ SELECT max(row_count) <= 1 no_duplicate_ids FROM (
 -- COMMAND ----------
 
 -- MAGIC %python
+-- MAGIC
 -- MAGIC from pyspark.sql.functions import count
 -- MAGIC
 -- MAGIC display(dedupedDF
@@ -214,21 +219,21 @@ SELECT max(row_count) <= 1 no_duplicate_ids FROM (
 
 -- COMMAND ----------
 
-SELECT max(user_id_count) <= 1 at_most_one_id FROM (
-  SELECT email, count(user_id) AS user_id_count
-  FROM deduped_users
-  WHERE email IS NOT NULL
-  GROUP BY email)
+SELECT max(user_id_count) <= 1 AS at_most_one_id FROM(
+SELECT email, COUNT(user_id) AS user_id_count
+FROM deduped_users 
+WHERE email IS NOT NULL
+GROUP BY email)
 
 -- COMMAND ----------
 
 -- MAGIC %python
 -- MAGIC
 -- MAGIC display(dedupedDF
--- MAGIC     .where(col("email").isNotNull())
--- MAGIC     .groupby("email")
--- MAGIC     .agg(count("user_id").alias("user_id_count"))
--- MAGIC     .select((max("user_id_count") <= 1).alias("at_most_one_id")))
+-- MAGIC         .where(col("email").isNotNull())
+-- MAGIC         .groupBy("email")
+-- MAGIC         .agg(count("user_id").alias("user_id_count"))
+-- MAGIC         .select((max("user_id_count") <= 1).alias("at_most_one_id")))
 
 -- COMMAND ----------
 
