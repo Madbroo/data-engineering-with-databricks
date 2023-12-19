@@ -32,12 +32,17 @@
 # MAGIC %md
 # MAGIC
 # MAGIC ### User-Defined Function (UDF)
-# MAGIC A custom column transformation function
+# MAGIC Is a custom column transformation function:
 # MAGIC
-# MAGIC - Can’t be optimized by Catalyst Optimizer
-# MAGIC - Function is serialized and sent to executors
-# MAGIC - Row data is deserialized from Spark's native binary format to pass to the UDF, and the results are serialized back into Spark's native format
-# MAGIC - For Python UDFs, additional interprocess communication overhead between the executor and a Python interpreter running on each worker node
+# MAGIC <li>Can’t be optimized by Catalyst Optimizer<strong>*</strong></li>
+# MAGIC <li>Function is serialized and sent to executors</li>
+# MAGIC <li>Row data is deserialized from Spark's native binary format to pass to the UDF, and the results are serialized back into Spark's native format</li>
+# MAGIC <li>For Python UDFs, additional interprocess communication overhead between the executor and a Python interpreter running on each worker node</li>
+# MAGIC
+# MAGIC **Catalyst Optimizer Overview:**
+# MAGIC The Catalyst Optimizer is a key component of Apache Spark's SQL execution engine. It's responsible for optimizing the execution plans of SQL queries. The optimizer analyzes the logical plan (the SQL query) and converts it into a physical plan that details how Spark will execute the query across the cluster. This process involves various optimizations like predicate pushdown, query rewrites, join optimizations, and more.<br/>
+# MAGIC
+# MAGIC **UDF Limitation:** When you write a UDF, the Catalyst Optimizer doesn't have visibility into the logic of your UDF. From the optimizer’s perspective, the UDF is a black box. This means the optimizer cannot apply many of its optimization techniques to queries involving UDFs.
 
 # COMMAND ----------
 
@@ -69,6 +74,15 @@ first_letter_function("annagray@kaufman.com")
 
 # COMMAND ----------
 
+def third_letter_upper_function(text):
+  if text and len(text) >= 3:
+    return text[:2] + text[2].upper() + text[3:]
+  else:
+    return text
+third_letter_upper_function("annagray@kaufman.com")
+
+# COMMAND ----------
+
 # DBTITLE 0,--i18n-17f25aa9-c20f-41da-bac5-95ebb413dcd4
 # MAGIC %md
 # MAGIC
@@ -78,6 +92,7 @@ first_letter_function("annagray@kaufman.com")
 # COMMAND ----------
 
 first_letter_udf = udf(first_letter_function)
+third_letter_upper_udf = udf(third_letter_upper_function)
 
 # COMMAND ----------
 
@@ -91,6 +106,14 @@ first_letter_udf = udf(first_letter_function)
 from pyspark.sql.functions import col
 
 display(sales_df.select(first_letter_udf(col("email"))))
+
+# COMMAND ----------
+
+display(sales_df.select("email"))
+
+# COMMAND ----------
+
+display(sales_df.select(third_letter_upper_udf(col("email"))))
 
 # COMMAND ----------
 
@@ -114,6 +137,12 @@ def first_letter_udf(email: str) -> str:
 
 # COMMAND ----------
 
+@udf("string")
+def third_letter_upper_udf(email: str) -> str:
+  return email[0:2] + email[2].upper() + email[3:]
+
+# COMMAND ----------
+
 # DBTITLE 0,--i18n-4d628fe1-2d94-4d86-888d-7b9df4107dba
 # MAGIC %md
 # MAGIC
@@ -128,12 +157,22 @@ display(sales_df.select(first_letter_udf(col("email"))))
 
 # COMMAND ----------
 
+display(sales_df.select(third_letter_upper_udf("email")))
+
+# COMMAND ----------
+
 # DBTITLE 0,--i18n-3ae354c0-0b10-4e8c-8cf6-da68e8fba9f2
 # MAGIC %md
 # MAGIC
 # MAGIC ### Pandas/Vectorized UDFs
 # MAGIC
-# MAGIC Pandas UDFs are available in Python to improve the efficiency of UDFs. Pandas UDFs utilize Apache Arrow to speed up computation.
+# MAGIC Pandas UDFs are available in Python to improve the efficiency of UDFs. Pandas UDFs utilize **Apache Arrow** to speed up computation. <br/>
+# MAGIC
+# MAGIC #####What Pandas UDFs are:<br/>
+# MAGIC Pandas UDFs use Apache Arrow to transfer data and Pandas to work with the data. Apache Arrow is an in-memory columnar data format that is used in Spark to efficiently transfer data between JVM and Python processes.
+# MAGIC They allow you to write your UDF logic using Pandas DataFrame APIs, which are familiar to many data scientists and engineers.
+# MAGIC When you apply a Pandas UDF to a Spark DataFrame, Spark breaks the data into multiple Pandas DataFrames, runs the UDF on each partition, and then combines the results back into a Spark DataFrame.
+# MAGIC
 # MAGIC
 # MAGIC * <a href="https://databricks.com/blog/2017/10/30/introducing-vectorized-udfs-for-pyspark.html" target="_blank">Blog post</a>
 # MAGIC * <a href="https://spark.apache.org/docs/latest/api/python/user_guide/sql/arrow_pandas.html?highlight=arrow" target="_blank">Documentation</a>
@@ -163,24 +202,41 @@ def vectorized_udf(email: pd.Series) -> pd.Series:
 
 # COMMAND ----------
 
+@pandas_udf("string")
+def third_letter_upper_vectorized_udf(email: pd.Series) -> pd.Series:
+  return email.str[:2] + email.str[2].str.upper() + email.str[3:]
+
+# COMMAND ----------
+
 display(sales_df.select(vectorized_udf(col("email"))))
+
+# COMMAND ----------
+
+display(sales_df.select(third_letter_upper_vectorized_udf(col("email"))))
 
 # COMMAND ----------
 
 # DBTITLE 0,--i18n-9a2fb1b1-8060-4e50-a759-f30dc73ce1a1
 # MAGIC %md
-# MAGIC
+# MAGIC ##### _Important_
 # MAGIC We can register these Pandas UDFs to the SQL namespace.
 
 # COMMAND ----------
 
 spark.udf.register("sql_vectorized_udf", vectorized_udf)
+spark.udf.register("sql_third_letter_upper_vectorized_udf", third_letter_upper_vectorized_udf)
 
 # COMMAND ----------
 
 # MAGIC %sql
 # MAGIC -- Use the Pandas UDF from SQL
 # MAGIC SELECT sql_vectorized_udf(email) AS firstLetter FROM sales
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC SELECT *, sql_third_letter_upper_vectorized_udf(email) AS 3rd_upper FROM sales
+# MAGIC
 
 # COMMAND ----------
 

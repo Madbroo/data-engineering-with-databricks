@@ -52,7 +52,16 @@
 
 -- COMMAND ----------
 
+-- MAGIC %python
+-- MAGIC print(DA.paths.working_dir)
+
+-- COMMAND ----------
+
 CREATE SCHEMA IF NOT EXISTS ${da.schema_name}_default_location;
+
+-- COMMAND ----------
+
+CREATE SCHEMA IF NOT EXISTS ${da.schema_name}_custom_location LOCATION '${da.paths.working_dir}/${da.schema_name}_custom_location.db'
 
 -- COMMAND ----------
 
@@ -66,6 +75,10 @@ CREATE SCHEMA IF NOT EXISTS ${da.schema_name}_default_location;
 -- COMMAND ----------
 
 DESCRIBE SCHEMA EXTENDED ${da.schema_name}_default_location;
+
+-- COMMAND ----------
+
+DESCRIBE SCHEMA EXTENDED ${da.schema_name}_custom_location
 
 -- COMMAND ----------
 
@@ -102,6 +115,10 @@ DESCRIBE DETAIL managed_table;
 
 -- COMMAND ----------
 
+DESCRIBE managed_table;
+
+-- COMMAND ----------
+
 -- DBTITLE 0,--i18n-bdc6475c-1c77-46a5-9ea1-04d5a538c225
 -- MAGIC %md
 -- MAGIC
@@ -118,6 +135,7 @@ DESCRIBE DETAIL managed_table;
 -- MAGIC
 -- MAGIC files = dbutils.fs.ls(tbl_location)
 -- MAGIC display(files)
+-- MAGIC
 
 -- COMMAND ----------
 
@@ -160,7 +178,9 @@ DROP TABLE managed_table;
 
 USE ${da.schema_name}_default_location;
 
-CREATE OR REPLACE TEMPORARY VIEW temp_delays USING CSV OPTIONS (
+CREATE OR REPLACE TEMPORARY VIEW temp_delays 
+USING CSV 
+OPTIONS (
   path = '${da.paths.datasets}/flights/departuredelays.csv',
   header = "true",
   mode = "FAILFAST" -- abort file parsing with a RuntimeException if any malformed lines are encountered
@@ -220,6 +240,7 @@ DROP TABLE external_table;
 -- COMMAND ----------
 
 DROP SCHEMA ${da.schema_name}_default_location CASCADE;
+DROP SCHEMA ${da.schema_name}_custom_location CASCADE;
 
 -- COMMAND ----------
 

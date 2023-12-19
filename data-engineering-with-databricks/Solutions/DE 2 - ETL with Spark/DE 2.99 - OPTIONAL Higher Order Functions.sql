@@ -59,9 +59,8 @@
 -- COMMAND ----------
 
 SELECT * FROM (
-  SELECT
-    order_id,
-    FILTER (items, i -> i.item_id LIKE "%K") AS king_items
+  SELECT order_id,
+  FILTER(items, i -> i.item_id LIKE "%K") AS king_items
   FROM sales)
 WHERE size(king_items) > 0
 
@@ -80,9 +79,7 @@ WHERE size(king_items) > 0
 -- COMMAND ----------
 
 SELECT *,
-  TRANSFORM (
-    items, i -> CAST(i.item_revenue_in_usd * 100 AS INT)
-  ) AS item_revenues
+  TRANSFORM (items, i -> CAST(i.item_revenue_in_usd * 100 AS INT)) AS item_revenues
 FROM sales
 
 -- COMMAND ----------
@@ -110,6 +107,14 @@ FROM sales
 -- MAGIC
 -- MAGIC See documentation for the <a href="https://docs.databricks.com/sql/language-manual/functions/exists.html" target="_blank">exists</a> function.  
 -- MAGIC You can use the condition expression **`item_name LIKE "%Mattress"`** to check whether the string **`item_name`** ends with the word "Mattress".
+
+-- COMMAND ----------
+
+SELECT
+  items,
+  EXISTS(items, i -> i.item_name LIKE "%Mattress") AS mattress,
+  EXISTS(items, i -> i.item_name LIKE "%Pillow") AS pillow
+FROM sales
 
 -- COMMAND ----------
 

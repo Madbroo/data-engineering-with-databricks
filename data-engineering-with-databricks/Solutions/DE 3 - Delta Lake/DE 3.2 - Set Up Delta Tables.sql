@@ -68,9 +68,9 @@ DESCRIBE EXTENDED sales;
 -- MAGIC  
 -- MAGIC CTAS statements automatically infer schema information from query results and do **not** support manual schema declaration. 
 -- MAGIC
--- MAGIC This means that CTAS statements are useful for external data ingestion from sources with well-defined schema, such as Parquet files and tables.
+-- MAGIC This means that CTAS statements are useful for external data ingestion from sources with **well-defined schema**, such as Parquet files and tables.
 -- MAGIC
--- MAGIC CTAS statements also do not support specifying additional file options.
+-- MAGIC CTAS statements also do **not** support specifying additional file options.
 -- MAGIC
 -- MAGIC We can see how this would present significant limitations when trying to ingest data from CSV files.
 

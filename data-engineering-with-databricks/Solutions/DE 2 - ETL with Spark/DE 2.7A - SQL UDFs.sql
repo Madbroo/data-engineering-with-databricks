@@ -60,7 +60,7 @@ SELECT *, sale_announcement(name, price) AS message FROM item_lookup
 -- DBTITLE 0,--i18n-5a5dfa8f-f9e7-4b5f-b229-30bed4497009
 -- MAGIC %md
 -- MAGIC
--- MAGIC Note that this function is applied to all values of the column in a parallel fashion within the Spark processing engine. SQL UDFs are an efficient way to define custom logic that is optimized for execution on Databricks.
+-- MAGIC Note that this function is applied to all values of the column in a parallel fashion within the Spark processing engine. **`SQL UDFs`** are an **efficient way to define custom logic that is optimized for execution on Databricks.**
 
 -- COMMAND ----------
 
@@ -70,7 +70,7 @@ SELECT *, sale_announcement(name, price) AS message FROM item_lookup
 -- MAGIC ## Scoping and Permissions of SQL UDFs
 -- MAGIC SQL user-defined functions:
 -- MAGIC - Persist between execution environments (which can include notebooks, DBSQL queries, and jobs).
--- MAGIC - Exist as objects in the metastore and are governed by the same Table ACLs as databases, tables, or views.
+-- MAGIC - Exist as objects in the **metastore** and are governed by the same Table ACLs as databases, tables, or views.
 -- MAGIC - To **create** a SQL UDF, you need **`USE CATALOG`** on the catalog, and **`USE SCHEMA`** and **`CREATE FUNCTION`** on the schema.
 -- MAGIC - To **use** a SQL UDF, you need **`USE CATALOG`** on the catalog, **`USE SCHEMA`** on the schema, and **`EXECUTE`** on the function.
 -- MAGIC
@@ -79,6 +79,10 @@ SELECT *, sale_announcement(name, price) AS message FROM item_lookup
 -- COMMAND ----------
 
 DESCRIBE FUNCTION EXTENDED sale_announcement
+
+-- COMMAND ----------
+
+DESCRIBE FUNCTION sale_announcement
 
 -- COMMAND ----------
 
