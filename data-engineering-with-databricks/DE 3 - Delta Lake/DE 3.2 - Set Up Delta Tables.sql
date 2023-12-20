@@ -68,9 +68,9 @@ DESCRIBE EXTENDED sales;
 -- MAGIC  
 -- MAGIC CTAS statements automatically infer schema information from query results and do **not** support manual schema declaration. 
 -- MAGIC
--- MAGIC This means that CTAS statements are useful for external data ingestion from sources with well-defined schema, such as Parquet files and tables.
+-- MAGIC This means that CTAS statements are useful for **external data** ingestion from sources with **well-defined schema**, such as Parquet files and tables.
 -- MAGIC
--- MAGIC CTAS statements also do not support specifying additional file options.
+-- MAGIC CTAS statements also do **not** support specifying additional file options.
 -- MAGIC
 -- MAGIC We can see how this would present significant limitations when trying to ingest data from CSV files.
 
@@ -106,6 +106,28 @@ CREATE TABLE sales_delta AS
   SELECT * FROM sales_tmp_vw;
   
 SELECT * FROM sales_delta
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC **NOTE:** without defining the columns in view created using CSV, all columns dtype will be STRING
+
+-- COMMAND ----------
+
+-- without defining the columns 
+CREATE OR REPLACE TEMP VIEW sales_test
+USING CSV
+OPTIONS (
+  path = "${da.paths.datasets}/ecommerce/raw/sales-csv",
+  header = "true",
+  delimiter = "|"
+);
+
+CREATE TABLE sales_delta_test 
+AS 
+SELECT * FROM sales_test;
+
+SELECT * FROM sales_delta_test
 
 -- COMMAND ----------
 
@@ -160,7 +182,10 @@ SELECT * FROM purchases_vw
 -- MAGIC The code below demonstrates creating a new table while:
 -- MAGIC 1. Specifying column names and types
 -- MAGIC 1. Adding a <a href="https://docs.databricks.com/delta/delta-batch.html#deltausegeneratedcolumns" target="_blank">generated column</a> to calculate the date
--- MAGIC 1. Providing a descriptive column comment for the generated column
+-- MAGIC 1. Providing a descriptive column comment for the generated column<br/>
+-- MAGIC
+-- MAGIC For more information about schema evolution see: [Automatic schema evolution for Delta Lake merge](https://learn.microsoft.com/en-us/azure/databricks/delta/update-schema#--automatic-schema-evolution-for-delta-lake-merge)
+-- MAGIC
 
 -- COMMAND ----------
 
@@ -220,8 +245,8 @@ SELECT * FROM purchase_dates
 
 -- COMMAND ----------
 
--- INSERT INTO purchase_dates VALUES
--- (1, 600000000, 42.0, "2020-06-18")
+--INSERT INTO purchase_dates VALUES
+--(1, 600000000, 42.0, "2020-06-18")
 
 -- COMMAND ----------
 
@@ -261,6 +286,39 @@ DESCRIBE EXTENDED purchase_dates
 
 -- COMMAND ----------
 
+CREATE TABLE people10m (
+  id INT NOT NULL,
+  firstName STRING,
+  middleName STRING NOT NULL,
+  lastName STRING,
+  gender STRING,
+  birthDate TIMESTAMP,
+  ssn STRING,
+  salary INT
+) USING DELTA;
+
+--ALTER TABLE people10m ALTER COLUMN middleName DROP NOT NULL;
+--ALTER TABLE people10m ALTER COLUMN ssn SET NOT NULL;
+
+-- COMMAND ----------
+
+insert into people10m values (1,'h',Null,'l','m',null,'s',1)
+
+-- COMMAND ----------
+
+ALTER TABLE people10m ALTER COLUMN middleName DROP NOT NULL;
+ALTER TABLE people10m ALTER COLUMN ssn SET NOT NULL;
+
+-- COMMAND ----------
+
+insert into people10m values (1,'h',Null,'l','m',null,null,1)
+
+-- COMMAND ----------
+
+DESCRIBE EXTENDED people10m
+
+-- COMMAND ----------
+
 -- DBTITLE 0,--i18n-07f549c0-71af-4271-a8f5-91b4237d89e4
 -- MAGIC %md
 -- MAGIC
@@ -280,7 +338,7 @@ DESCRIBE EXTENDED purchase_dates
 -- MAGIC The **`CREATE TABLE`** clause contains several options:
 -- MAGIC * A **`COMMENT`** is added to allow for easier discovery of table contents
 -- MAGIC * A **`LOCATION`** is specified, which will result in an external (rather than managed) table
--- MAGIC * The table is **`PARTITIONED BY`** a date column; this means that the data from each data will exist within its own directory in the target storage location
+-- MAGIC * The table is **`PARTITIONED BY`** a date column; this means that the data from each date will exist within its own directory in the target storage location
 -- MAGIC
 -- MAGIC **NOTE**: Partitioning is shown here primarily to demonstrate syntax and impact. Most Delta Lake tables (especially small-to-medium sized data) will not benefit from partitioning. Because partitioning physically separates data files, this approach can result in a small files problem and prevent file compaction and efficient data skipping. The benefits observed in Hive or HDFS do not translate to Delta Lake, and you should consult with an experienced Delta Lake architect before partitioning tables.
 -- MAGIC
@@ -340,7 +398,7 @@ DESCRIBE EXTENDED users_pii
 -- MAGIC ## Cloning Delta Lake Tables
 -- MAGIC Delta Lake has two options for efficiently copying Delta Lake tables.
 -- MAGIC
--- MAGIC **`DEEP CLONE`** fully copies data and metadata from a source table to a target. This copy occurs incrementally, so executing this command again can sync changes from the source to the target location.
+-- MAGIC **`DEEP CLONE`** fully copies data and metadata from a source table to a target. This copy **occurs incrementally**, so executing this command again **can sync changes from the source to the target location.**
 
 -- COMMAND ----------
 
@@ -353,9 +411,9 @@ DEEP CLONE purchases
 -- MAGIC %md
 -- MAGIC
 -- MAGIC
--- MAGIC Because all the data files must be copied over, this can take quite a while for large datasets.
+-- MAGIC Because **all** the data files must be copied over, this can take quite a while for large datasets.
 -- MAGIC
--- MAGIC If you wish to create a copy of a table quickly to test out applying changes without the risk of modifying the current table, **`SHALLOW CLONE`** can be a good option. Shallow clones just copy the Delta transaction logs, meaning that the data doesn't move.
+-- MAGIC If you wish to create a copy of a table **quickly** to **test out** applying changes **without** the risk of modifying the current table, **`SHALLOW CLONE`** can be a good option. Shallow clones **just copy the Delta transaction logs**, meaning that the data doesn't move.
 
 -- COMMAND ----------
 
@@ -367,7 +425,7 @@ SHALLOW CLONE purchases
 -- DBTITLE 0,--i18n-045bfc09-41cc-4710-ab67-acab3881f128
 -- MAGIC %md
 -- MAGIC
--- MAGIC
+-- MAGIC **NOTE:**
 -- MAGIC In either case, data modifications applied to the cloned version of the table will be tracked and stored separately from the source. Cloning is a great way to set up tables for testing SQL code while still in development.
 
 -- COMMAND ----------

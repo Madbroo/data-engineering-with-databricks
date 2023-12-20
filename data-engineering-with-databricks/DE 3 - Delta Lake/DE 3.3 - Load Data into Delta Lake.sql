@@ -47,10 +47,10 @@
 -- MAGIC ## Complete Overwrites
 -- MAGIC
 -- MAGIC We can use overwrites to atomically replace all of the data in a table. There are multiple benefits to overwriting tables instead of deleting and recreating tables:
--- MAGIC - Overwriting a table is much faster because it doesn’t need to list the directory recursively or delete any files.
--- MAGIC - The old version of the table still exists; can easily retrieve the old data using Time Travel.
--- MAGIC - It’s an atomic operation. Concurrent queries can still read the table while you are deleting the table.
--- MAGIC - Due to ACID transaction guarantees, if overwriting the table fails, the table will be in its previous state.
+-- MAGIC - Overwriting a table is **much faster** because it doesn’t need to list the directory recursively or delete any files.
+-- MAGIC - The **old version** of the table still **exists**; can easily **retrieve** the old data using **Time Travel**.
+-- MAGIC - It’s an **atomic** operation. Concurrent queries can still read the table while you are deleting the table.
+-- MAGIC - Due to **ACID** transaction guarantees, if overwriting the table fails, the table will be in its previous state.
 -- MAGIC
 -- MAGIC Spark SQL provides two easy methods to accomplish complete overwrites.
 -- MAGIC
@@ -74,6 +74,10 @@ SELECT * FROM parquet.`${da.paths.datasets}/ecommerce/raw/events-historical`
 -- COMMAND ----------
 
 DESCRIBE HISTORY events
+
+-- COMMAND ----------
+
+DESCRIBE EXTENDED events
 
 -- COMMAND ----------
 
@@ -120,8 +124,8 @@ DESCRIBE HISTORY sales
 
 -- COMMAND ----------
 
--- INSERT OVERWRITE sales
--- SELECT *, current_timestamp() FROM parquet.`${da.paths.datasets}/ecommerce/raw/sales-historical`
+INSERT OVERWRITE sales
+SELECT *, current_timestamp() FROM parquet.`${da.paths.datasets}/ecommerce/raw/sales-historical`
 
 -- COMMAND ----------
 
@@ -148,7 +152,7 @@ SELECT * FROM parquet.`${da.paths.datasets}/ecommerce/raw/sales-30m`
 -- MAGIC
 -- MAGIC
 -- MAGIC
--- MAGIC Note that **`INSERT INTO`** does not have any built-in guarantees to prevent inserting the same records multiple times. Re-executing the above cell would write the same records to the target table, resulting in duplicate records.
+-- MAGIC Note that **`INSERT INTO`** **does not** have any built-in guarantees to prevent inserting the same records multiple times. Re-executing the above cell would write the same records to the target table, resulting in duplicate records.
 
 -- COMMAND ----------
 
@@ -159,7 +163,7 @@ SELECT * FROM parquet.`${da.paths.datasets}/ecommerce/raw/sales-30m`
 -- MAGIC
 -- MAGIC ## Merge Updates
 -- MAGIC
--- MAGIC You can upsert data from a source table, view, or DataFrame into a target Delta table using the **`MERGE`** SQL operation. Delta Lake supports inserts, updates and deletes in **`MERGE`**, and supports extended syntax beyond the SQL standards to facilitate advanced use cases.
+-- MAGIC You can *upsert* data from a source table, view, or DataFrame into a target Delta table using the **`MERGE`** SQL operation. Delta Lake supports inserts, updates and deletes in **`MERGE`**, and supports extended syntax beyond the SQL standards to facilitate advanced use cases.
 -- MAGIC
 -- MAGIC <strong><code>
 -- MAGIC MERGE INTO target a<br/>
@@ -169,7 +173,8 @@ SELECT * FROM parquet.`${da.paths.datasets}/ecommerce/raw/sales-30m`
 -- MAGIC WHEN NOT MATCHED THEN {not_matched_action}<br/>
 -- MAGIC </code></strong>
 -- MAGIC
--- MAGIC We will use the **`MERGE`** operation to update historic users data with updated emails and new users.
+-- MAGIC We will use the **`MERGE`** operation to update historic users data with updated emails and new users.<br/>
+-- MAGIC **NOTE:** In Databricks Runtime 12.0 and above, you can use **`EXCEPT`** clauses in merge conditions to explicitly exclude columns. See Docs: [EXCLUDE columns with Delta Lake MERGE](https://learn.microsoft.com/en-us/azure/databricks/delta/update-schema#--exclude-columns-with-delta-lake-merge)
 
 -- COMMAND ----------
 
@@ -194,12 +199,20 @@ FROM parquet.`${da.paths.datasets}/ecommerce/raw/users-30m`
 
 -- COMMAND ----------
 
+SELECT * FROM users_update
+
+-- COMMAND ----------
+
 MERGE INTO users a
 USING users_update b
 ON a.user_id = b.user_id
 WHEN MATCHED AND a.email IS NULL AND b.email IS NOT NULL THEN
   UPDATE SET email = b.email, updated = b.updated
 WHEN NOT MATCHED THEN INSERT *
+
+-- COMMAND ----------
+
+SELECT * FROM users
 
 -- COMMAND ----------
 
@@ -243,9 +256,9 @@ WHEN NOT MATCHED AND b.traffic_source = 'email' THEN
 -- MAGIC
 -- MAGIC **`COPY INTO`** provides SQL engineers an idempotent option to incrementally ingest data from external systems.
 -- MAGIC
--- MAGIC Note that this operation does have some expectations:
--- MAGIC - Data schema should be consistent
--- MAGIC - Duplicate records should try to be excluded or handled downstream
+-- MAGIC **Note** that this operation does have some expectations:
+-- MAGIC - Data **schema** should be **consistent**
+-- MAGIC - **Duplicate records** should try to be excluded or handled downstream
 -- MAGIC
 -- MAGIC This operation is potentially much cheaper than full table scans for data that grows predictably.
 -- MAGIC
