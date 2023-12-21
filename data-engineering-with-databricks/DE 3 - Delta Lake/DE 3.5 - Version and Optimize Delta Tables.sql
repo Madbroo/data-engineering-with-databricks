@@ -15,7 +15,7 @@
 -- MAGIC
 -- MAGIC Now that you feel comfortable performing basic data tasks with Delta Lake, we can discuss a few features unique to Delta Lake.
 -- MAGIC
--- MAGIC Note that while some of the keywords used here aren't part of standard ANSI SQL, all Delta Lake operations can be run on Databricks using SQL
+-- MAGIC Note that while some of the keywords used here **aren't** part of standard ANSI SQL, all Delta Lake operations can be run on Databricks using SQL
 -- MAGIC
 -- MAGIC ## Learning Objectives
 -- MAGIC By the end of this lesson, you should be able to:
@@ -99,7 +99,7 @@ WHEN NOT MATCHED AND u.type = "insert"
 -- MAGIC
 -- MAGIC ## Examine Table Details
 -- MAGIC
--- MAGIC Databricks uses a Hive metastore by default to register schemas, tables, and views.
+-- MAGIC Databricks uses a **Hive metastore** by default to register schemas, tables, and views.
 -- MAGIC
 -- MAGIC Using **`DESCRIBE EXTENDED`** allows us to see important metadata about our table.
 
@@ -109,11 +109,15 @@ DESCRIBE EXTENDED students
 
 -- COMMAND ----------
 
+DESCRIBE HISTORY students
+
+-- COMMAND ----------
+
 -- DBTITLE 0,--i18n-a6be5873-30b3-4e7e-9333-2c1e6f1cbe25
 -- MAGIC %md
 -- MAGIC
 -- MAGIC
--- MAGIC **`DESCRIBE DETAIL`** is another command that allows us to explore table metadata.
+-- MAGIC **`DESCRIBE DETAIL`** is another command that allows us to explore table **metadata**.
 
 -- COMMAND ----------
 
@@ -144,6 +148,12 @@ DESCRIBE DETAIL students
 -- COMMAND ----------
 
 -- MAGIC %python
+-- MAGIC display(dbutils.fs.ls('dbfs:/mnt/dbacademy-users/mehdi.darshi@outlook.com/data-engineer-learning-path/database.db/students'))
+
+-- COMMAND ----------
+
+-- MAGIC %python
+-- MAGIC #the same with the previous:
 -- MAGIC display(dbutils.fs.ls(f"{DA.paths.user_db}/students"))
 
 -- COMMAND ----------
@@ -164,6 +174,11 @@ DESCRIBE DETAIL students
 
 -- MAGIC %python
 -- MAGIC display(dbutils.fs.ls(f"{DA.paths.user_db}/students/_delta_log"))
+
+-- COMMAND ----------
+
+-- lets check one of these json files
+SELECT * from JSON.`dbfs:/mnt/dbacademy-users/mehdi.darshi@outlook.com/data-engineer-learning-path/database.db/students/_delta_log/00000000000000000001.json`
 
 -- COMMAND ----------
 
@@ -247,6 +262,11 @@ ZORDER BY id
 
 -- COMMAND ----------
 
+-- we can see that after OPTIMIZE the number of files reduced to 1 !
+DESCRIBE DETAIL students
+
+-- COMMAND ----------
+
 -- DBTITLE 0,--i18n-2ad93f7e-4bb1-4051-8b9c-b685164e3b45
 -- MAGIC %md
 -- MAGIC
@@ -269,14 +289,14 @@ DESCRIBE HISTORY students
 -- MAGIC
 -- MAGIC Remember all of those extra data files that had been marked as removed in our transaction log? These provide us with the ability to query previous versions of our table.
 -- MAGIC
--- MAGIC These time travel queries can be performed by specifying either the integer version or a timestamp.
+-- MAGIC These **`time travel`** queries can be performed by specifying either the integer version or a timestamp.
 -- MAGIC
 -- MAGIC **NOTE**: In most cases, you'll use a timestamp to recreate data at a time of interest. For our demo we'll use version, as this is deterministic (whereas you may be running this demo at any time in the future).
 
 -- COMMAND ----------
 
 SELECT * 
-FROM students VERSION AS OF 3
+FROM students VERSION AS OF 8
 
 -- COMMAND ----------
 
@@ -321,10 +341,21 @@ SELECT * FROM students
 -- MAGIC
 -- MAGIC
 -- MAGIC Deleting all the records in your table is probably not a desired outcome. Luckily, we can simply rollback this commit.
+-- MAGIC <code>
+-- MAGIC RESTORE [ TABLE ] table_name [ TO ] time_travel_version
+-- MAGIC </code><br/>
+-- MAGIC
+-- MAGIC time_travel_version:<br>
+-- MAGIC  { TIMESTAMP AS OF timestamp_expression |
+-- MAGIC    VERSION AS OF version }
 
 -- COMMAND ----------
 
 RESTORE TABLE students TO VERSION AS OF 8 
+
+-- COMMAND ----------
+
+DESCRIBE DETAIL students
 
 -- COMMAND ----------
 
@@ -345,7 +376,7 @@ RESTORE TABLE students TO VERSION AS OF 8
 -- MAGIC Databricks will automatically clean up stale log files (> 30 days by default) in Delta Lake tables.
 -- MAGIC Each time a checkpoint is written, Databricks automatically cleans up log entries older than this retention interval.
 -- MAGIC
--- MAGIC While Delta Lake versioning and time travel are great for querying recent versions and rolling back queries, keeping the data files for all versions of large production tables around indefinitely is very expensive (and can lead to compliance issues if PII is present).
+-- MAGIC While Delta Lake versioning and time travel are great for querying recent versions and rolling back queries, *keeping the data files for all versions of large production tables around indefinitely is __very expensive__ (and can lead to compliance issues if PII is present)*.
 -- MAGIC
 -- MAGIC If you wish to manually purge old data files, this can be performed with the **`VACUUM`** operation.
 -- MAGIC
@@ -353,7 +384,7 @@ RESTORE TABLE students TO VERSION AS OF 8
 
 -- COMMAND ----------
 
--- VACUUM students RETAIN 0 HOURS
+VACUUM students RETAIN 0 HOURS
 
 -- COMMAND ----------
 
@@ -361,7 +392,7 @@ RESTORE TABLE students TO VERSION AS OF 8
 -- MAGIC %md
 -- MAGIC
 -- MAGIC
--- MAGIC By default, **`VACUUM`** will prevent you from deleting files less than 7 days old, just to ensure that no long-running operations are still referencing any of the files to be deleted. If you run **`VACUUM`** on a Delta table, you lose the ability time travel back to a version older than the specified data retention period.  In our demos, you may see Databricks executing code that specifies a retention of **`0 HOURS`**. This is simply to demonstrate the feature and is not typically done in production.  
+-- MAGIC By default, **`VACUUM`** will prevent you from deleting files **less than 7 days old**, just to ensure that no long-running operations are still referencing any of the files to be deleted. If you run **`VACUUM`** on a Delta table, you lose the ability time travel back to a version older than the specified data retention period.  In our demos, you may see Databricks executing code that specifies a retention of **`0 HOURS`**. This is simply to demonstrate the feature and is not typically done in production.  
 -- MAGIC
 -- MAGIC In the following cell, we:
 -- MAGIC 1. Turn off a check to prevent premature deletion of data files
