@@ -80,9 +80,9 @@ source = spark.conf.get("source")
 # MAGIC
 # MAGIC Delta Live Tables introduces a number of new Python functions that extend familiar PySpark APIs.
 # MAGIC
-# MAGIC At the heart of this design, the decorator **`@dlt.table`** is added to any Python function that returns a Spark DataFrame. (**NOTE**: This includes Koalas DataFrames, but these won't be covered in this course.)
+# MAGIC At the heart of this design, the decorator **`@dlt.table`** is added to any Python function that **returns a Spark DataFrame**. (**NOTE**: This includes Koalas DataFrames, but these won't be covered in this course.)
 # MAGIC
-# MAGIC If you're used to working with Spark and/or Structured Streaming, you'll recognize the majority of the syntax used in DLT. The big difference is that you'll never see any methods or options for DataFrame writers, as this logic is handled by DLT.
+# MAGIC If you're used to working with Spark and/or Structured Streaming, you'll recognize the majority of the syntax used in DLT. *The **big difference** is that you'll **never** see any methods or options for DataFrame **writers**, as this logic is handled by DLT.*
 # MAGIC
 # MAGIC As such, the basic form of a DLT table definition will look like:
 # MAGIC
@@ -114,7 +114,7 @@ source = spark.conf.get("source")
 # COMMAND ----------
 
 @dlt.table
-def orders_bronze():
+def orders_bronze_py():
     return (
         spark.readStream
             .format("cloudFiles")
@@ -173,9 +173,9 @@ def orders_bronze():
     comment = "Append only orders with valid timestamps",
     table_properties = {"quality": "silver"})
 @dlt.expect_or_fail("valid_date", F.col("order_timestamp") > "2021-01-01")
-def orders_silver():
+def orders_silver_py():
     return (
-        dlt.read_stream("orders_bronze")
+        dlt.read_stream("orders_bronze_py")
             .select(
                 "processing_time",
                 "customer_id",
@@ -212,9 +212,9 @@ def orders_silver():
 # COMMAND ----------
 
 @dlt.table
-def orders_by_date():
+def orders_by_date_py():
     return (
-        dlt.read("orders_silver")
+        dlt.read("orders_silver_py")
             .groupBy(F.col("order_timestamp").cast("date").alias("order_date"))
             .agg(F.count("*").alias("total_daily_orders"))
     )

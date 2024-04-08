@@ -18,7 +18,7 @@ from pyspark.sql.functions import lit
 from pyspark.sql.functions import regexp_replace
 from pyspark.sql.functions import rtrim
 
-from azure.storage.blob import BlobServiceClient
+#from azure.storage.blob import BlobServiceClient
 
 
 # COMMAND ----------

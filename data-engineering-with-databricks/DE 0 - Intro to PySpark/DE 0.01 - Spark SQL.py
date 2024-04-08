@@ -37,7 +37,7 @@
 # MAGIC %md
 # MAGIC
 # MAGIC ## Multiple Interfaces
-# MAGIC Spark SQL is a module for structured data processing with multiple interfaces.
+# MAGIC Spark SQL is a module for **structured data** processing with **multiple interfaces**.
 # MAGIC
 # MAGIC We can interact with Spark SQL in two ways:
 # MAGIC 1. Executing SQL queries
@@ -72,11 +72,11 @@
 # COMMAND ----------
 
 display(spark
-        .table("products")
-        .select("name", "price")
-        .where("price < 200")
-        .orderBy("price")
-       )
+          .table("products")
+          .select("name", "price")
+          .where("price < 200")
+          .orderBy("price")
+        )
 
 # COMMAND ----------
 
@@ -242,7 +242,7 @@ budget_df.printSchema()
 # MAGIC Transformations operate on and return DataFrames, allowing us to chain transformation methods together to construct new DataFrames.
 # MAGIC However, these operations can't execute on their own, as transformation methods are **lazily evaluated**.
 # MAGIC
-# MAGIC Running the following cell does not trigger any computation.
+# MAGIC Running the following cell does not trigger any ***computation***.
 
 # COMMAND ----------
 
@@ -250,6 +250,19 @@ budget_df.printSchema()
   .select("name", "price")
   .where("price < 200")
   .orderBy("price"))
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC <img src="https://files.training.databricks.com/images/icon_note_32.png" alt="Note"> **Good to know**
+# MAGIC
+# MAGIC In Databricks, as well as in many other big data platforms that use Apache Spark, the DataFrame API provides a way to manipulate large datasets in a distributed manner. The statement that "the transformation methods on Databricks DataFrame API are lazily evaluated and can't execute on their own" refers to a couple of key concepts in how Spark handles data processing:
+# MAGIC
+# MAGIC 1. **Lazy Evaluation**: This means that when you use ***transformation operations*** on a DataFrame (like `select`, `filter`, `groupBy`, etc.), these operations are not immediately executed. Instead, Spark **constructs a plan** of these operations, known as a ***Directed Acyclic Graph (DAG)***. The actual computation on the data is deferred until an **action operation** (like `show`, `collect`, `count`, etc.) is called. The advantage of lazy evaluation is that it allows Spark to **optimize the entire chain of transformations** together rather than executing each transformation independently. *This can lead to more efficient execution plans and faster overall data processing.*
+# MAGIC
+# MAGIC 2. **Cannot Execute on Their Own**: Since transformation methods do not trigger any actual computation, they cannot execute by themselves. They need to be followed by action methods to trigger the execution of the computations. For example, if you define a series of transformations to clean your data, those transformations will only be applied when you perform an action, such as writing the data out to a file or displaying the results with a command that collects data to the driver node for display.
+# MAGIC
+# MAGIC In practice, this approach means that you can build complex data processing pipelines that are optimized and efficient, because Spark looks at the pipeline as a whole and can optimize it before executing any data movement or computation. This also helps in managing resource use more effectively, as computations are only performed when absolutely necessary.
 
 # COMMAND ----------
 
@@ -306,6 +319,14 @@ budget_df.count()
 # COMMAND ----------
 
 budget_df.collect()
+
+# COMMAND ----------
+
+budget_df.show()
+
+# COMMAND ----------
+
+budget_df.describe()
 
 # COMMAND ----------
 

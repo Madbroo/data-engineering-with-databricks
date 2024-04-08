@@ -94,7 +94,7 @@ display(event_counts_df)
 # DBTITLE 0,--i18n-bf63efea-c4f7-4ff9-9d42-4de245617d97
 # MAGIC %md
 # MAGIC
-# MAGIC Here, we're getting the average purchase revenue for each.
+# MAGIC Here, we're getting the average purchase revenue for each state.
 
 # COMMAND ----------
 
@@ -143,7 +143,7 @@ display(city_purchase_quantities_df)
 # MAGIC | sumDistinct | Returns the sum of distinct values in the expression |
 # MAGIC | var_pop | Returns the population variance of the values in a group |
 # MAGIC
-# MAGIC Use the grouped data method <a href="https://spark.apache.org/docs/latest/api/python/reference/api/pyspark.sql.GroupedData.agg.html#pyspark.sql.GroupedData.agg" target="_blank">**`agg`**</a> to apply built-in aggregate functions
+# MAGIC **NOTE:** Use the grouped data method <a href="https://spark.apache.org/docs/latest/api/python/reference/api/pyspark.sql.GroupedData.agg.html#pyspark.sql.GroupedData.agg" target="_blank">**`agg`**</a> to apply built-in aggregate functions
 # MAGIC
 # MAGIC This allows you to apply other transformations on the resulting columns, such as <a href="https://spark.apache.org/docs/latest/api/python/reference/api/pyspark.sql.Column.alias.html" target="_blank">**`alias`**</a>.
 
@@ -153,6 +153,16 @@ from pyspark.sql.functions import sum
 
 state_purchases_df = df.groupBy("geo.state").agg(sum("ecommerce.total_item_quantity").alias("total_purchases"))
 display(state_purchases_df)
+
+# COMMAND ----------
+
+state_city_purchase_df = (df
+                          .groupBy("geo.state", "geo.city")
+                          .agg(sum("ecommerce.total_item_quantity").alias("item_total"), 
+                               sum("ecommerce.purchase_revenue_in_usd").alias("revenue_total").cast("int"), 
+                               avg("ecommerce.purchase_revenue_in_usd").alias("revenue_avg").cast("int"))
+                          )
+display(state_city_purchase_df)
 
 # COMMAND ----------
 

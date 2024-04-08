@@ -11,19 +11,19 @@
 -- MAGIC %md
 -- MAGIC # Fundamentals of DLT SQL Syntax
 -- MAGIC
--- MAGIC This notebook demonstrates using Delta Live Tables (DLT) to process raw data from JSON files landing in cloud object storage through a series of tables to drive analytic workloads in the lakehouse. Here we demonstrate a medallion architecture, where data is incrementally transformed and enriched as it flows through a pipeline. This notebook focuses on the SQL syntax of DLT rather than this architecture, but a brief overview of the design:
+-- MAGIC This notebook demonstrates using Delta Live Tables (DLT) to process raw data from JSON files landing in cloud object storage through a series of tables to drive analytic workloads in the lakehouse. Here we demonstrate a **medallion** architecture, where data is incrementally transformed and enriched as it flows through a pipeline. This notebook focuses on the SQL syntax of DLT rather than this architecture, but a brief overview of the design:
 -- MAGIC
--- MAGIC * The bronze table contains raw records loaded from JSON enriched with data describing how records were ingested
--- MAGIC * The silver table validates and enriches the fields of interest
--- MAGIC * The gold table contains aggregate data to drive business insights and dashboarding
+-- MAGIC * The **bronze** table contains **raw** records loaded from JSON enriched with data describing how records were ingested
+-- MAGIC * The **silver** table validates and enriches the fields of interest
+-- MAGIC * The **gold** table contains **aggregate data** to drive business insights and dashboarding
 -- MAGIC
 -- MAGIC ## Learning Objectives
 -- MAGIC
 -- MAGIC By the end of this notebook, students should feel comfortable:
 -- MAGIC * Declaring Delta Live Tables
--- MAGIC * Ingesting data with Auto Loader
+-- MAGIC * Ingesting data with **Auto Loader**
 -- MAGIC * Using parameters in DLT Pipelines
--- MAGIC * Enforcing data quality with constraints
+-- MAGIC * Enforcing **data quality** with constraints
 -- MAGIC * Adding comments to tables
 -- MAGIC * Describing differences in syntax and execution of live tables and streaming live tables
 
@@ -54,8 +54,8 @@
 -- MAGIC Delta Live Tables adapts standard SQL queries to combine DDL (data definition language) and DML (data manipulation language) into a unified declarative syntax.
 -- MAGIC
 -- MAGIC There are two distinct types of persistent tables that can be created with DLT:
--- MAGIC * **Live tables** are materialized views for the lakehouse; they will return the current results of any query with each refresh
--- MAGIC * **Streaming live tables** are designed for incremental, near-real time data processing
+-- MAGIC * **`LIVE TABLE`** are **materialized views** for the lakehouse; they will return the current results of any query with each refresh
+-- MAGIC * **`STREAMING LIVE TABLE`** are designed for **incremental, near-real time data processing**
 -- MAGIC
 -- MAGIC Note that both of these objects are persisted as tables stored with the Delta Lake protocol (providing ACID transactions, versioning, and many other benefits). We'll talk more about the differences between live tables and streaming live tables later in the notebook.
 -- MAGIC
@@ -78,7 +78,7 @@
 -- MAGIC The **`cloud_files()`** method enables Auto Loader to be used natively with SQL. This method takes the following positional parameters:
 -- MAGIC * The source location, which should be cloud-based object storage
 -- MAGIC * The source data format, which is JSON in this case
--- MAGIC * An arbitrarily sized comma-separated list of optional reader options. In this case, we set **`cloudFiles.inferColumnTypes`** to **`true`**
+-- MAGIC * An arbitrarily sized comma-separated list of optional [reader options](https://learn.microsoft.com/en-us/azure/databricks/ingestion/auto-loader/options). In this case, we set **`cloudFiles.inferColumnTypes`** to **`true`**
 -- MAGIC
 -- MAGIC In the query below, in addition to the fields contained in the source, Spark SQL functions for the **`current_timestamp()`** and **`input_file_name()`** as used to capture information about when the record was ingested and the specific file source for each record.
 
@@ -113,9 +113,9 @@ FROM cloud_files("${source}/orders", "json", map("cloudFiles.inferColumnTypes", 
 -- MAGIC ### Data Quality Constraints
 -- MAGIC
 -- MAGIC DLT uses simple boolean statements to allow quality enforcement checks on data. In the statement below, we:
--- MAGIC * Declare a constraint named **`valid_date`**
--- MAGIC * Define the conditional check that the field **`order_timestamp`** must contain a value greater than January 1, 2021
--- MAGIC * Instruct DLT to fail the current transaction if any records violate the constraint
+-- MAGIC * Declare a **constraint** named **`valid_date`**
+-- MAGIC * Define the **conditional check** that the field **`order_timestamp`** must contain a value greater than January 1, 2021
+-- MAGIC * Instruct DLT to **fail** the current transaction if any records **violate the constraint**
 -- MAGIC
 -- MAGIC Each constraint can have multiple conditions, and multiple constraints can be set for a single table. In addition to failing the update, constraint violation can also automatically drop records or just record the number of violations while still processing these invalid records.
 -- MAGIC
@@ -146,7 +146,7 @@ FROM STREAM(LIVE.orders_bronze)
 -- MAGIC
 -- MAGIC The two queries we've reviewed so far have both created streaming live tables. Below, we see a simple query that returns a live table (or materialized view) of some aggregated data.
 -- MAGIC
--- MAGIC Spark has historically differentiated between batch queries and streaming queries. Live tables and streaming live tables have similar differences.
+-- MAGIC *Spark has historically differentiated between **batch** queries and **streaming** queries.* Live tables and streaming live tables have similar differences.
 -- MAGIC
 -- MAGIC Note the only syntactic differences between streaming live tables and live tables are the lack of the **`STREAMING`** keyword in the create clause and not wrapping the source table in the **`STREAM()`** method.
 -- MAGIC
@@ -158,7 +158,7 @@ FROM STREAM(LIVE.orders_bronze)
 -- MAGIC * Should not be modified by operations external to the DLT Pipeline (you'll either get undefined answers or your change will just be undone).
 -- MAGIC
 -- MAGIC ### Streaming Live Tables
--- MAGIC * Only supports reading from "append-only" streaming sources.
+-- MAGIC * Only supports **reading** from **"append-only"** streaming sources.
 -- MAGIC * Only reads each input batch once, no matter what (even if joined dimensions change, or if the query definition changes, etc).
 -- MAGIC * Can perform operations on the table outside the managed DLT Pipeline (append data, perform GDPR, etc).
 

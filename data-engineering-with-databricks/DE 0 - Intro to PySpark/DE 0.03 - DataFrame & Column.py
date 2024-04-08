@@ -198,6 +198,11 @@ display(no_sales_df)
 
 # COMMAND ----------
 
+no_device_df = events_df.drop(col("ecommerce"), col("device"))
+display(no_device_df)
+
+# COMMAND ----------
+
 # DBTITLE 0,--i18n-b11609a3-11d5-453b-b713-15131b277066
 # MAGIC %md
 # MAGIC

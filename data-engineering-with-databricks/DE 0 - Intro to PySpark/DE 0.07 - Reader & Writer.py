@@ -333,7 +333,16 @@ display(
 
 # COMMAND ----------
 
+display(events_df)
+
+# COMMAND ----------
+
 events_df.write.mode("overwrite").saveAsTable("events")
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC select * from events
 
 # COMMAND ----------
 
@@ -386,6 +395,18 @@ events_output_path = DA.paths.working_dir + "/delta/events"
  .mode("overwrite")
  .save(events_output_path)
 )
+
+# COMMAND ----------
+
+print(events_output_path)
+
+# COMMAND ----------
+
+df = spark.read.format("delta").load(events_output_path)
+
+# COMMAND ----------
+
+display(df)
 
 # COMMAND ----------
 
