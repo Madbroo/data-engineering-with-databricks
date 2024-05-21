@@ -96,7 +96,7 @@ SELECT count(*) FROM users_dirty WHERE email IS NULL;
 -- MAGIC from pyspark.sql.functions import col
 -- MAGIC usersDF = spark.read.table("users_dirty")
 -- MAGIC
--- MAGIC usersDF.selectExpr("count_if(email IS NULL)")
+-- MAGIC # display(usersDF.selectExpr("count_if(email IS NULL)"))
 -- MAGIC usersDF.where(col("email").isNull()).count()
 
 -- COMMAND ----------
@@ -106,6 +106,10 @@ SELECT count(*) FROM users_dirty WHERE email IS NULL;
 -- MAGIC  
 -- MAGIC ## Deduplicate Rows
 -- MAGIC We can use **`DISTINCT *`** to remove true duplicate records where entire rows contain the same values.
+
+-- COMMAND ----------
+
+SELECT * FROM users_dirty
 
 -- COMMAND ----------
 
@@ -134,7 +138,7 @@ SELECT DISTINCT(*) FROM users_dirty
 
 CREATE OR REPLACE TEMP VIEW deduped_users
 AS
-SELECT user_id, user_first_touch_timestamp, MAX(email) AS email, max(updated) AS updated
+SELECT user_id, user_first_touch_timestamp, MAX(email) AS email, MAX(updated) AS updated
 FROM users_dirty
 WHERE user_id IS NOT NULL
 GROUP BY user_id, user_first_touch_timestamp;
@@ -192,7 +196,8 @@ WHERE user_id IS NOT NULL
 
 -- COMMAND ----------
 
-SELECT max(row_count) <= 1 AS no_duplicate_ids FROM (
+SELECT max(row_count) <= 1 AS no_duplicate_ids 
+FROM (
   SELECT user_id, count(*) AS row_count
   FROM deduped_users
   GROUP BY user_id)
@@ -219,11 +224,12 @@ SELECT max(row_count) <= 1 AS no_duplicate_ids FROM (
 
 -- COMMAND ----------
 
-SELECT max(user_id_count) <= 1 AS at_most_one_id FROM(
-SELECT email, COUNT(user_id) AS user_id_count
-FROM deduped_users 
-WHERE email IS NOT NULL
-GROUP BY email)
+SELECT max(user_id_count) <= 1 AS at_most_one_id 
+FROM(
+  SELECT email, COUNT(user_id) AS user_id_count
+  FROM deduped_users 
+  WHERE email IS NOT NULL
+  GROUP BY email)
 
 -- COMMAND ----------
 

@@ -67,6 +67,11 @@ display(gmail_accounts)
 
 # COMMAND ----------
 
+yahoo_accounts = sales_df.filter(col("email").endswith("yahoo.com"))
+display(yahoo_accounts)
+
+# COMMAND ----------
+
 # DBTITLE 0,--i18n-a88d37a6-5e98-40ad-9045-bb8fd4d36331
 # MAGIC %md
 # MAGIC
@@ -106,6 +111,12 @@ print(sales_df.na.drop().count())
 # DBTITLE 0,--i18n-aef560b8-7bb6-4985-a43d-38541ba78d33
 # MAGIC %md
 # MAGIC Since the row counts are the same, we have the no null columns.  We'll need to explode items to find some nulls in columns such as items.coupon.
+
+# COMMAND ----------
+
+display(sales_df
+              .withColumn("items", explode(col("items"))).select("items.coupon")
+        )
 
 # COMMAND ----------
 

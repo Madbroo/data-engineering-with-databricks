@@ -208,7 +208,7 @@ print("Hello Python!")
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC -- SELECT * FROM demo_tmp_vw
+# MAGIC --SELECT * FROM demo_tmp_vw
 
 # COMMAND ----------
 
@@ -276,6 +276,10 @@ print(f"DA.schema_name:       {DA.schema_name}")
 # MAGIC SELECT '${da.username}' AS current_username,
 # MAGIC        '${da.paths.working_dir}' AS working_directory,
 # MAGIC        '${da.schema_name}' as schema_name
+
+# COMMAND ----------
+
+display(_sqldf)
 
 # COMMAND ----------
 

@@ -49,6 +49,16 @@
 
 -- COMMAND ----------
 
+-- MAGIC %python
+-- MAGIC print(DA.paths.sales_csv)
+
+-- COMMAND ----------
+
+-- MAGIC %python
+-- MAGIC display(dbutils.fs.ls("dbfs:/mnt/dbacademy-users/mehdi.darshi@outlook.com/data-engineer-learning-path/"))
+
+-- COMMAND ----------
+
 SELECT * FROM csv.`${DA.paths.sales_csv}`
 
 -- COMMAND ----------

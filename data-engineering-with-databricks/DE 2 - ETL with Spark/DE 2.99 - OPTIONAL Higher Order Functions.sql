@@ -59,11 +59,11 @@
 -- COMMAND ----------
 
 SELECT * FROM (
-  SELECT
-    order_id,
-    FILTER (items, i -> i.item_id LIKE "%K") AS king_items
+  SELECT 
+  order_id,
+  FILTER( items, i -> i.item_id LIKE "%K") AS king_items
   FROM sales)
-WHERE size(king_items) > 0
+WHERE size(king_items) > 0;
 
 -- COMMAND ----------
 
@@ -80,9 +80,9 @@ WHERE size(king_items) > 0
 -- COMMAND ----------
 
 SELECT *,
-  TRANSFORM (
+  TRANSFORM(
     items, i -> CAST(i.item_revenue_in_usd * 100 AS INT)
-  ) AS item_revenues
+  ) AS item_revenue
 FROM sales
 
 -- COMMAND ----------
@@ -115,9 +115,12 @@ FROM sales
 
 -- TODO
 CREATE OR REPLACE TABLE sales_product_flags AS
-<FILL_IN>
-EXISTS <FILL_IN>.item_name LIKE "%Mattress"
-EXISTS <FILL_IN>.item_name LIKE "%Pillow"
+SELECT items,
+EXISTS (items, i -> i.item_name LIKE "%Mattress") AS mattress,
+EXISTS (items, i -> i.item_name LIKE "%Pillow")   AS pillow
+FROM sales;
+
+SELECT * FROM sales_product_flags
 
 -- COMMAND ----------
 
@@ -127,6 +130,10 @@ EXISTS <FILL_IN>.item_name LIKE "%Pillow"
 -- MAGIC
 -- MAGIC
 -- MAGIC The helper function below will return an error with a message on what needs to change if you have not followed instructions. No output means that you have completed this step.
+
+-- COMMAND ----------
+
+-- SELECT * FROM sales
 
 -- COMMAND ----------
 

@@ -52,9 +52,16 @@
 
 -- COMMAND ----------
 
-CREATE OR REPLACE TEMP VIEW events_strings 
-AS 
+-- SELECT string(key), string(value) FROM events_raw;
+SELECT * FROM events_raw;
+
+-- COMMAND ----------
+
+CREATE OR REPLACE TEMP VIEW events_strings
+AS
 SELECT string(key), string(value) FROM events_raw;
+
+-- COMMAND ----------
 
 SELECT * FROM events_strings
 
@@ -63,11 +70,12 @@ SELECT * FROM events_strings
 -- MAGIC %python
 -- MAGIC from pyspark.sql.functions import col
 -- MAGIC events_stringsDF = (spark
--- MAGIC                     .table("events_raw")
--- MAGIC                     .select(col("key").cast("string"),
--- MAGIC                             col("value").cast("string"))
--- MAGIC                     )
--- MAGIC display(events_stringsDF)
+-- MAGIC                   .table("events_raw")
+-- MAGIC                   .select(col("key").cast("string"),
+-- MAGIC                           col("value").cast("string"))
+-- MAGIC                   )
+-- MAGIC display(events_stringDF)
+-- MAGIC
 
 -- COMMAND ----------
 
@@ -95,11 +103,10 @@ SELECT * FROM events_strings WHERE value:event_name = "finalize" ORDER BY key LI
 -- COMMAND ----------
 
 -- MAGIC %python
--- MAGIC display(events_stringsDF
--- MAGIC     .where("value:event_name = 'finalize'")
--- MAGIC     .orderBy("key")
--- MAGIC     .limit(1)
--- MAGIC )
+-- MAGIC display(events_stringsDF.where("value:event_name = 'finalize'")
+-- MAGIC                         .orderBy("key")
+-- MAGIC                         .limit(1)
+-- MAGIC                         )
 
 -- COMMAND ----------
 
@@ -114,16 +121,23 @@ SELECT * FROM events_strings WHERE value:event_name = "finalize" ORDER BY key LI
 
 -- COMMAND ----------
 
-SELECT schema_of_json('{"device":"Linux","ecommerce":{"purchase_revenue_in_usd":1075.5,"total_item_quantity":1,"unique_items":1},"event_name":"finalize","event_previous_timestamp":1593879231210816,"event_timestamp":1593879335779563,"geo":{"city":"Houston","state":"TX"},"items":[{"coupon":"NEWBED10","item_id":"M_STAN_K","item_name":"Standard King Mattress","item_revenue_in_usd":1075.5,"price_in_usd":1195.0,"quantity":1}],"traffic_source":"email","user_first_touch_timestamp":1593454417513109,"user_id":"UA000000106116176"}') AS schema
+SELECT schema_of_json('{"device":"Linux","ecommerce":{"purchase_revenue_in_usd":1047.6,"total_item_quantity":2,"unique_items":2},"event_name":"finalize","event_previous_timestamp":1593879787820475,"event_timestamp":1593879948830076,"geo":{"city":"Huntington Park","state":"CA"},"items":[{"coupon":"NEWBED10","item_id":"M_STAN_Q","item_name":"Standard Queen Mattress","item_revenue_in_usd":940.5,"price_in_usd":1045.0,"quantity":1},{"coupon":"NEWBED10","item_id":"P_DOWN_S","item_name":"Standard Down Pillow","item_revenue_in_usd":107.10000000000001,"price_in_usd":119.0,"quantity":1}],"traffic_source":"email","user_first_touch_timestamp":1593583891412316,"user_id":"UA000000106459577"}
+') AS schema
 
 -- COMMAND ----------
 
-CREATE OR REPLACE TEMP VIEW parsed_events AS 
+CREATE OR REPLACE TEMP VIEW parsed_events
+AS
 SELECT json.* FROM (
-  SELECT from_json(value, 'STRUCT<device: STRING, ecommerce: STRUCT<purchase_revenue_in_usd: DOUBLE, total_item_quantity: BIGINT, unique_items: BIGINT>, event_name: STRING, event_previous_timestamp: BIGINT, event_timestamp: BIGINT, geo: STRUCT<city: STRING, state: STRING>, items: ARRAY<STRUCT<coupon: STRING, item_id: STRING, item_name: STRING, item_revenue_in_usd: DOUBLE, price_in_usd: DOUBLE, quantity: BIGINT>>, traffic_source: STRING, user_first_touch_timestamp: BIGINT, user_id: STRING>') AS json 
-  FROM events_strings);
+    SELECT from_json(value, 'STRUCT<device: STRING, ecommerce: STRUCT<purchase_revenue_in_usd: DOUBLE, total_item_quantity: BIGINT, unique_items: BIGINT>, event_name: STRING, event_previous_timestamp: BIGINT, event_timestamp: BIGINT, geo: STRUCT<city: STRING, state: STRING>, items: ARRAY<STRUCT<coupon: STRING, item_id: STRING, item_name: STRING, item_revenue_in_usd: DOUBLE, price_in_usd: DOUBLE, quantity: BIGINT>>, traffic_source: STRING, user_first_touch_timestamp: BIGINT, user_id: STRING>') AS json 
+    FROM events_strings);
 
-SELECT * FROM parsed_events
+  SELECT * FROM parsed_events
+
+-- COMMAND ----------
+
+-- MAGIC %python
+-- MAGIC display(events_stringsDF)
 
 -- COMMAND ----------
 
@@ -131,13 +145,13 @@ SELECT * FROM parsed_events
 -- MAGIC from pyspark.sql.functions import from_json, schema_of_json
 -- MAGIC
 -- MAGIC json_string = """
--- MAGIC {"device":"Linux","ecommerce":{"purchase_revenue_in_usd":1047.6,"total_item_quantity":2,"unique_items":2},"event_name":"finalize","event_previous_timestamp":1593879787820475,"event_timestamp":1593879948830076,"geo":{"city":"Huntington Park","state":"CA"},"items":[{"coupon":"NEWBED10","item_id":"M_STAN_Q","item_name":"Standard Queen Mattress","item_revenue_in_usd":940.5,"price_in_usd":1045.0,"quantity":1},{"coupon":"NEWBED10","item_id":"P_DOWN_S","item_name":"Standard Down Pillow","item_revenue_in_usd":107.10000000000001,"price_in_usd":119.0,"quantity":1}],"traffic_source":"email","user_first_touch_timestamp":1593583891412316,"user_id":"UA000000106459577"}
+-- MAGIC {"device":"Linux","ecommerce":{"purchase_revnue_in_usd":1047.6,"total_item_quantity":2,"unique_items":2},"event_name":"finalize","event_previous_timestamp":1593879787820475,"event_timestamp":1593879948830076,"geo":{"city":"Huntington Park","state":"CA"},"items":[{"coupon":"NEWBED10","item_id":"M_STAN_Q","item_name":"Standard Queen Mattress","item_revenue_in_usd":940.5,"price_in_usd":1045.0,"quantity":1},{"coupon":"NEWBED10","item_id":"P_DOWN_S","item_name":"Standard Down Pillow","item_revenue_in_usd":107.10000000000001,"price_in_usd":119.0,"quantity":1}],"traffic_source":"email","user_first_touch_timestamp":1593583891412316,"user_id":"UA000000106459577"}
 -- MAGIC """
--- MAGIC parsed_eventsDF = (events_stringsDF
--- MAGIC     .select(from_json("value", schema_of_json(json_string)).alias("json"))
--- MAGIC     .select("json.*")
--- MAGIC )
 -- MAGIC
+-- MAGIC parsed_eventsDF = (events_stringsDF
+-- MAGIC                    .select(from_json("value",schema_of_json(json_string)).alias("json"))
+-- MAGIC                    .select("json.*")
+-- MAGIC                   )
 -- MAGIC display(parsed_eventsDF)
 
 -- COMMAND ----------
@@ -147,7 +161,7 @@ SELECT * FROM parsed_events
 -- MAGIC ### Manipulate Arrays
 -- MAGIC
 -- MAGIC Spark SQL has a number of functions for manipulating array data, including the following:
--- MAGIC - **`explode()`** separates the elements of an array into multiple rows; this creates a new row for each element.
+-- MAGIC - **`explode()`** separates the elements of an **array** into multiple rows; this creates a new row for each element.
 -- MAGIC - **`size()`** provides a count for the number of elements in an array for each row.
 -- MAGIC
 -- MAGIC The code below explodes the **`items`** field (an array of structs) into multiple rows and shows events containing arrays with 3 or more items.
@@ -195,9 +209,8 @@ FROM exploded_events
 
 -- COMMAND ----------
 
-SELECT user_id,
-  collect_set(event_name) AS event_history, -- returns all unique events for each user_id
-  array_distinct(flatten(collect_set(items.item_id))) AS cart_history -- returns all unique items
+SELECT user_id, collect_set(event_name) AS event_history,
+      array_distinct(flatten(collect_set(items.item_id))) AS cart_history 
 FROM exploded_events
 GROUP BY user_id
 
@@ -207,10 +220,10 @@ GROUP BY user_id
 -- MAGIC from pyspark.sql.functions import array_distinct, collect_set, flatten
 -- MAGIC
 -- MAGIC display(exploded_eventsDF
--- MAGIC         .groupBy("user_id")
--- MAGIC         .agg(collect_set("event_name").alias("event_history"),
--- MAGIC              array_distinct(flatten(collect_set("items.item_id"))).alias("cart_history"))
--- MAGIC         )
+-- MAGIC           .groupBy("user_id")
+-- MAGIC           .agg(collect_set("event_name").alias("event_history"),
+-- MAGIC                array_distinct(flatten(collect_set("items.item_id"))).alias("cart_history "))
+-- MAGIC           )
 
 -- COMMAND ----------
 
@@ -231,20 +244,27 @@ GROUP BY user_id
 
 -- COMMAND ----------
 
-SELECT *
-FROM (SELECT * , explode(items) AS item FROM sales) AS a
-INNER JOIN item_lookup AS b
-  ON a.item.item_id = b.item_id
---item_lookup
+SELECT * FROM item_lookup
 
 -- COMMAND ----------
 
-CREATE OR REPLACE TEMP VIEW item_purchases AS
+SELECT *, explode(items) AS item FROM sales
 
-SELECT * 
-FROM (SELECT *, explode(items) AS item FROM sales) a
-INNER JOIN item_lookup b
-ON a.item.item_id = b.item_id;
+-- COMMAND ----------
+
+SELECT *
+FROM (SELECT *, explode(items) AS item FROM sales) AS a
+INNER JOIN item_lookup AS b
+  ON a.item.item_id = b.item_id
+
+-- COMMAND ----------
+
+CREATE OR REPLACE TEMP VIEW item_purchases 
+AS
+SELECT *
+FROM (SELECT *, explode(items) AS item FROM sales) AS a
+INNER JOIN item_lookup AS b
+  ON a.item.item_id = b.item_id;
 
 SELECT * FROM item_purchases
 
@@ -252,12 +272,12 @@ SELECT * FROM item_purchases
 
 -- MAGIC %python
 -- MAGIC exploded_salesDF = (spark
--- MAGIC                     .table("sales")
--- MAGIC                     .withColumn("item", explode("items"))
+-- MAGIC                       .table("sales")
+-- MAGIC                       .withColumn("item", explode("items"))
 -- MAGIC                   )
 -- MAGIC
--- MAGIC itemsDF = spark.table("item_lookup")
--- MAGIC item_purchasesDF = (exploded_salesDF.join(itemsDF, exploded_salesDF.item.item_id == itemsDF.item_id))
+-- MAGIC itemDF = spark.table("item_lookup")
+-- MAGIC item_purchasesDF = (exploded_salesDF.join(itemDF, exploded_salesDF.item.item_id == itemDF.item_id))
 -- MAGIC
 -- MAGIC display(item_purchasesDF)
 
@@ -274,22 +294,22 @@ SELECT * FROM item_purchases
 
 -- COMMAND ----------
 
-SELECT *
+SELECT * 
 FROM item_purchases
 PIVOT (sum(item.quantity) FOR item_id IN (
-    'P_FOAM_K',
-    'M_STAN_Q',
-    'P_FOAM_S',
-    'M_PREM_Q',
-    'M_STAN_F',
-    'M_STAN_T',
-    'M_PREM_K',
-    'M_PREM_F',
-    'M_STAN_K',
-    'M_PREM_T',
-    'P_DOWN_S',
-    'P_DOWN_K')
-  )
+  'P_FOAM_K',
+  'M_STAN_Q',
+  'P_FOAM_S',
+  'M_PREM_Q',
+  'M_STAN_F',
+  'M_STAN_T',
+  'M_PREM_K',
+  'M_PREM_F',
+  'M_STAN_K',
+  'M_PREM_T',
+  'P_DOWN_S',
+  'P_DOWN_K')
+)
 
 -- COMMAND ----------
 

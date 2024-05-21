@@ -158,7 +158,7 @@ display(files)
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC SELECT * FROM delta.`${DA.paths.datasets}/nyctaxi-with-zipcodes/data`
+# MAGIC SELECT * FROM DELTA.`${DA.paths.datasets}/nyctaxi-with-zipcodes/data`
 
 # COMMAND ----------
 

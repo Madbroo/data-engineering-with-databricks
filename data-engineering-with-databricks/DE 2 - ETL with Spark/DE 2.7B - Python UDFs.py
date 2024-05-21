@@ -38,6 +38,11 @@
 # MAGIC - Function is serialized and sent to executors
 # MAGIC - Row data is deserialized from Spark's native binary format to pass to the UDF, and the results are serialized back into Spark's native format
 # MAGIC - For Python UDFs, additional interprocess communication overhead between the executor and a Python interpreter running on each worker node
+# MAGIC
+# MAGIC **Catalyst Optimizer Overview:**
+# MAGIC The Catalyst Optimizer is a key component of Apache Spark's SQL execution engine. It's responsible for optimizing the execution plans of SQL queries. The optimizer analyzes the logical plan (the SQL query) and converts it into a physical plan that details how Spark will execute the query across the cluster. This process involves various optimizations like predicate pushdown, query rewrites, join optimizations, and more.<br/>
+# MAGIC
+# MAGIC <img src="https://files.training.databricks.com/images/icon_note_32.png" alt="Note"> **UDF Limitation:** When you write a UDF, the Catalyst Optimizer **doesn't** have visibility into the logic of your UDF. From the optimizer’s perspective, the UDF is a black box. This means the optimizer cannot apply many of its optimization techniques to queries involving UDFs.
 
 # COMMAND ----------
 
@@ -114,6 +119,12 @@ def first_letter_udf(email: str) -> str:
 
 # COMMAND ----------
 
+@udf("string")
+def third_letter_upper_udf(email: str) -> str:
+  return email[0:2] + email[2].upper() + email[3:]
+
+# COMMAND ----------
+
 # DBTITLE 0,--i18n-4d628fe1-2d94-4d86-888d-7b9df4107dba
 # MAGIC %md
 # MAGIC
@@ -124,7 +135,7 @@ def first_letter_udf(email: str) -> str:
 from pyspark.sql.functions import col
 
 sales_df = spark.table("sales")
-display(sales_df.select(first_letter_udf(col("email"))))
+display(sales_df.select(first_letter_udf(col("email")), third_letter_upper_udf("email")))
 
 # COMMAND ----------
 
@@ -133,10 +144,15 @@ display(sales_df.select(first_letter_udf(col("email"))))
 # MAGIC
 # MAGIC ### Pandas/Vectorized UDFs
 # MAGIC
-# MAGIC Pandas UDFs are available in Python to improve the efficiency of UDFs. Pandas UDFs utilize Apache Arrow to speed up computation.
+# MAGIC Pandas UDFs are available in Python to improve the efficiency of UDFs. Pandas UDFs utilize **Apache Arrow** to speed up computation.
 # MAGIC
 # MAGIC * <a href="https://databricks.com/blog/2017/10/30/introducing-vectorized-udfs-for-pyspark.html" target="_blank">Blog post</a>
 # MAGIC * <a href="https://spark.apache.org/docs/latest/api/python/user_guide/sql/arrow_pandas.html?highlight=arrow" target="_blank">Documentation</a>
+# MAGIC
+# MAGIC #####What Pandas UDFs are:<br/>
+# MAGIC Pandas UDFs use Apache Arrow to transfer data and Pandas to work with the data. Apache Arrow is an in-memory **columnar** data format that is used in Spark to efficiently transfer data between JVM and Python processes.
+# MAGIC They allow you to write your UDF logic using Pandas DataFrame APIs, which are familiar to many data scientists and engineers.
+# MAGIC When you apply a Pandas UDF to a Spark DataFrame, Spark breaks the data into multiple Pandas DataFrames, runs the UDF on each partition, and then combines the results back into a Spark DataFrame.
 # MAGIC
 # MAGIC <img src="https://databricks.com/wp-content/uploads/2017/10/image1-4.png" alt="Benchmark" width ="500" height="1500">
 # MAGIC
@@ -145,6 +161,15 @@ display(sales_df.select(first_letter_udf(col("email"))))
 # MAGIC * Pandas inside the function, to work with Pandas instances and APIs
 # MAGIC
 # MAGIC <img src="https://files.training.databricks.com/images/icon_warn_32.png" alt="Warning"> As of Spark 3.0, you should **always** define your Pandas UDF using Python type hints.
+
+# COMMAND ----------
+
+import pandas as pd
+from pyspark.sql.functions import pandas_udf
+
+@pandas_udf("string")
+def vectorized_udf(email: pd.Series) -> pd.Series:
+  return email.str[0]
 
 # COMMAND ----------
 

@@ -77,6 +77,11 @@
 -- COMMAND ----------
 
 -- MAGIC %python
+-- MAGIC display(dbutils.fs.ls('dbfs:/mnt/dbacademy-datasets/data-engineer-learning-path/v02/ecommerce/raw/'))
+
+-- COMMAND ----------
+
+-- MAGIC %python
 -- MAGIC display(dbutils.fs.ls(DA.paths.datasets))
 
 -- COMMAND ----------
@@ -115,6 +120,10 @@
 -- COMMAND ----------
 
 SELECT * FROM json.`${DA.paths.kafka_events}/001.json`
+
+-- COMMAND ----------
+
+SELECT * FROM JSON.`dbfs:/mnt/dbacademy-datasets/data-engineer-learning-path/v02/ecommerce/raw/events-kafka/000.json`
 
 -- COMMAND ----------
 
@@ -199,7 +208,7 @@ AS SELECT * FROM json.`${DA.paths.kafka_events}`
 -- DBTITLE 0,--i18n-a9f9827b-2258-4481-a9d9-6fecf55aeb9b
 -- MAGIC %md
 -- MAGIC
--- MAGIC Temporary views exists only for the current SparkSession. On Databricks, this means they are isolated to the current notebook, job, or DBSQL query.
+-- MAGIC Temporary views ***exists*** only for the ***current SparkSession***. On Databricks, this means they are isolated to the current notebook, job, or DBSQL query.
 
 -- COMMAND ----------
 
@@ -210,13 +219,14 @@ SELECT * FROM events_temp_view
 -- DBTITLE 0,--i18n-dcfaeef2-0c3b-4782-90a6-5e0332dba614
 -- MAGIC %md
 -- MAGIC ## Apply CTEs for Reference within a Query 
--- MAGIC Common table expressions (CTEs) are perfect when you want a short-lived, human-readable reference to the results of a query.
+-- MAGIC Common table expressions (CTEs) are perfect when you want a __short-lived__, human-readable reference to the results of a query.
 
 -- COMMAND ----------
 
 WITH cte_json
 AS (SELECT * FROM json.`${DA.paths.kafka_events}`)
 SELECT * FROM cte_json
+-- SELECT COUNT(*) FROM cte_json
 
 -- COMMAND ----------
 
@@ -238,7 +248,7 @@ SELECT COUNT(*) FROM cte_json
 -- MAGIC
 -- MAGIC ## Extract Text Files as Raw Strings
 -- MAGIC
--- MAGIC When working with text-based files (which include JSON, CSV, TSV, and TXT formats), you can use the **`text`** format to load each line of the file as a row with one string column named **`value`**. This can be useful when data sources are prone to corruption and custom text parsing functions will be used to extract values from text fields.
+-- MAGIC When working with ___text-based___ files (which include JSON, CSV, TSV, and TXT formats), you can use the **`text`** format to load each line of the file as a row with one string column named **`value`**. This can be useful when data sources are prone to corruption and custom text parsing functions will be used to extract values from text fields.
 
 -- COMMAND ----------
 

@@ -20,7 +20,7 @@ DA.conclude_setup()
 # COMMAND ----------
 
 # TODO
-my_name = 'Mehdi Darshi a Data Engineer at adesso SE'
+my_name = 'I am Mehdi Darshi, an Azure Data Engineer @ adesso SE.'
 
 # COMMAND ----------
 

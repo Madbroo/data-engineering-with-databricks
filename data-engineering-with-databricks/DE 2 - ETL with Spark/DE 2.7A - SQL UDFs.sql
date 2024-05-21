@@ -78,6 +78,10 @@ SELECT *, sale_announcement(name, price) AS message FROM item_lookup
 
 -- COMMAND ----------
 
+DESCRIBE FUNCTION sale_announcement
+
+-- COMMAND ----------
+
 DESCRIBE FUNCTION EXTENDED sale_announcement
 
 -- COMMAND ----------
@@ -98,6 +102,20 @@ DESCRIBE FUNCTION EXTENDED sale_announcement
 -- MAGIC Combining SQL UDFs with control flow in the form of **`CASE`** / **`WHEN`** clauses provides optimized execution for control flows within SQL workloads. The standard SQL syntactic construct **`CASE`** / **`WHEN`** allows the evaluation of multiple conditional statements with alternative outcomes based on table contents.
 -- MAGIC
 -- MAGIC Here, we demonstrate wrapping this control flow logic in a function that will be reusable anywhere we can execute SQL.
+
+-- COMMAND ----------
+
+CREATE OR REPLACE FUNCTION item_preference(name STRING, price INT)
+RETURNS STRING
+RETURN
+        CASE
+          WHEN name = "Standard Queen Mattress" THEN "This is my default mattress."
+          WHEN name = "Premium Queen Mattress"  THEN "This is my favorite mattress."
+          WHEN price > 100 THEN concat("I'd wait until the ", name, " is on sale for $", round(price * 0.8, 0))
+          ELSE concat("I don't need a ", name)
+        END;
+
+SELECT *, item_preference(name, price) FROM item_lookup;
 
 -- COMMAND ----------
 
