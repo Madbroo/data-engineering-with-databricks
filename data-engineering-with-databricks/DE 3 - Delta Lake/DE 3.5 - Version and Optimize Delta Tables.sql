@@ -29,6 +29,9 @@
 -- MAGIC **Resources**
 -- MAGIC * <a href="https://docs.databricks.com/spark/latest/spark-sql/language-manual/delta-optimize.html" target="_blank">Delta Optimize - Databricks Docs</a>
 -- MAGIC * <a href="https://docs.databricks.com/spark/latest/spark-sql/language-manual/delta-vacuum.html" target="_blank">Delta Vacuum - Databricks Docs</a>
+-- MAGIC
+-- MAGIC **NOTE**: Databricks/Spark made some changes to the versioning and optimization logic, therefore some explanations in markdown cells might not match the output of `DESCRIBE HISTORY <table>`.
+-- MAGIC
 
 -- COMMAND ----------
 
@@ -90,6 +93,10 @@ WHEN MATCHED AND u.type = "delete"
   THEN DELETE
 WHEN NOT MATCHED AND u.type = "insert"
   THEN INSERT *;
+
+-- COMMAND ----------
+
+SELECT * FROM students
 
 -- COMMAND ----------
 
@@ -364,6 +371,10 @@ DESCRIBE DETAIL students
 -- MAGIC
 -- MAGIC
 -- MAGIC Note that a **`RESTORE`** <a href="https://docs.databricks.com/spark/latest/spark-sql/language-manual/delta-restore.html" target="_blank">command</a> is recorded as a transaction; you won't be able to completely hide the fact that you accidentally deleted all the records in the table, but you will be able to undo the operation and bring your table back to a desired state.
+
+-- COMMAND ----------
+
+DESCRIBE HISTORY students
 
 -- COMMAND ----------
 

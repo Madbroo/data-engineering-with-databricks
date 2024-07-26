@@ -108,6 +108,10 @@
 
 # COMMAND ----------
 
+dbutils.library.restartPython()
+
+# COMMAND ----------
+
 # MAGIC %run ./Includes/Print-Dataset-Copyrights
 
 # COMMAND ----------

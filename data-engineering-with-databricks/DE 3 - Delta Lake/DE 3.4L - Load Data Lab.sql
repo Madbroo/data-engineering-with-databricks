@@ -71,10 +71,16 @@
 
 -- COMMAND ----------
 
--- TODO
-CREATE OR REPLACE TABLE events_raw (
-    key BINARY, offset BIGINT, partition INT, timestamp BIGINT, topic STRING, value BINARY
+-- TODO - done!
+CREATE OR REPLACE TABLE events_raw(
+  key BINARY,
+  offset BIGINT,
+  partition INT,
+  timestamp BIGINT,
+  topic STRING,
+  value BINARY
 )
+
 
 -- COMMAND ----------
 
@@ -116,13 +122,18 @@ CREATE OR REPLACE TABLE events_raw (
 
 -- COMMAND ----------
 
-DESCRIBE EXTENDED events_raw
-
--- COMMAND ----------
-
--- TODO
-INSERT INTO events_raw
+-- TODO - done!
+INSERT INTO events_raw(
+  key,
+  offset,
+  partition,
+  timestamp,
+  topic,
+  value
+)
 SELECT * FROM events_json
+
+
 
 -- COMMAND ----------
 
@@ -135,8 +146,13 @@ SELECT * FROM events_json
 
 -- COMMAND ----------
 
--- TODO
+-- TODO - done!
 SELECT * FROM events_raw
+
+
+-- COMMAND ----------
+
+DESCRIBE DETAIL events_raw
 
 -- COMMAND ----------
 
@@ -179,12 +195,9 @@ SELECT * FROM events_raw
 -- COMMAND ----------
 
 -- TODO
-CREATE OR REPLACE TABLE item_lookup AS
+CREATE OR REPLACE TABLE item_lookup
+AS
 SELECT * FROM PARQUET.`${da.paths.datasets}/ecommerce/raw/item-lookup`
-
--- COMMAND ----------
-
-SELECT * FROM item_lookup
 
 -- COMMAND ----------
 
@@ -209,6 +222,10 @@ SELECT * FROM item_lookup
 -- MAGIC
 -- MAGIC suite.display_results()
 -- MAGIC assert suite.passed
+
+-- COMMAND ----------
+
+SELECT * FROM item_lookup
 
 -- COMMAND ----------
 

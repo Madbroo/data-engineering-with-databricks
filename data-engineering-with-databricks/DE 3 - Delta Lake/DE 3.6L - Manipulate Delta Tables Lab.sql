@@ -111,8 +111,20 @@ SELECT * FROM beans
 
 -- COMMAND ----------
 
--- TODO
 DESCRIBE HISTORY beans
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC **NOTE** It seems that some changes took placed in Spark operations and history logic. The code blow is a run from Des 2023 and you dont see any OPTIMIZE operation in history.<br>
+-- MAGIC As [Update of JUNE 2024](https://docs.databricks.com/en/release-notes/product/2024/march.html#predictive-optimization-available-in-more-regions)<br>
+-- MAGIC [Predictive Optimization](https://docs.databricks.com/en/optimizations/predictive-optimization.html)
+-- MAGIC
+
+-- COMMAND ----------
+
+-- TODO
+-- DESCRIBE HISTORY beans
 
 -- COMMAND ----------
 
@@ -182,7 +194,7 @@ SELECT * FROM beans
 
 -- TODO
 CREATE OR REPLACE TEMP VIEW pre_delete_vw AS
-SELECT * FROM beans VERSION AS OF 4
+SELECT * FROM beans VERSION AS OF 5
 
 -- COMMAND ----------
 
@@ -218,7 +230,7 @@ SELECT * FROM pre_delete_vw
 -- COMMAND ----------
 
 -- TODO
-RESTORE TABLE beans TO VERSION AS OF 5
+RESTORE TABLE beans TO VERSION AS OF 7
 
 -- COMMAND ----------
 

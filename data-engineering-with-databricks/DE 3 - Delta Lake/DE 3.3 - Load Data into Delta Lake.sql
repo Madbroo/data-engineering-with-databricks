@@ -56,7 +56,8 @@
 -- MAGIC
 -- MAGIC Some students may have noticed previous lesson on CTAS statements actually used CRAS statements (to avoid potential errors if a cell was run multiple times).
 -- MAGIC
--- MAGIC **`CREATE OR REPLACE TABLE`** (CRAS) statements fully replace the contents of a table each time they execute.
+-- MAGIC **`CREATE OR REPLACE TABLE`** (CRAS) statements fully replace the contents of a table each time they execute.<br> 
+-- MAGIC **NTOE:** In this method new data could have a new schema!
 
 -- COMMAND ----------
 
@@ -96,7 +97,7 @@ DESCRIBE EXTENDED events
 -- COMMAND ----------
 
 INSERT OVERWRITE sales
-SELECT * FROM parquet.`${da.paths.datasets}/ecommerce/raw/sales-historical/`
+SELECT * FROM PARQUET.`${da.paths.datasets}/ecommerce/raw/sales-historical/`
 
 -- COMMAND ----------
 
@@ -118,9 +119,16 @@ DESCRIBE HISTORY sales
 -- MAGIC
 -- MAGIC A primary difference here has to do with how Delta Lake enforces schema on write.
 -- MAGIC
--- MAGIC Whereas a CRAS statement will allow us to completely redefine the contents of our target table, **`INSERT OVERWRITE`** will fail if we try to change our schema (unless we provide optional settings). 
+-- MAGIC Whereas a CRAS statement will allow us to completely redefine the contents of our target table, **`INSERT OVERWRITE`** will fail if we try to change our schema (unless we provide optional settings). <br>
+-- MAGIC <br> If [schema evolution](https://docs.databricks.com/en/delta/update-schema.html#enable-schema-evolution) is enabled, new columns can exist as the last columns of your schema (or nested columns) for the schema to evolve.<br>
+-- MAGIC **`spark.conf.set("spark.databricks.delta.schema.autoMerge.enabled", "true")`**
+-- MAGIC
 -- MAGIC
 -- MAGIC Uncomment and run the cell below to generate an expected error message.
+
+-- COMMAND ----------
+
+SELECT * FROM sales
 
 -- COMMAND ----------
 
@@ -143,7 +151,7 @@ SELECT *, current_timestamp() FROM parquet.`${da.paths.datasets}/ecommerce/raw/s
 -- COMMAND ----------
 
 INSERT INTO sales
-SELECT * FROM parquet.`${da.paths.datasets}/ecommerce/raw/sales-30m`
+SELECT * FROM PARQUET.`${da.paths.datasets}/ecommerce/raw/sales-30m`
 
 -- COMMAND ----------
 
@@ -152,7 +160,7 @@ SELECT * FROM parquet.`${da.paths.datasets}/ecommerce/raw/sales-30m`
 -- MAGIC
 -- MAGIC
 -- MAGIC
--- MAGIC Note that **`INSERT INTO`** **does not** have any built-in guarantees to prevent inserting the same records multiple times. Re-executing the above cell would write the same records to the target table, resulting in duplicate records.
+-- MAGIC **Note** that **`INSERT INTO`** **does not** have any built-in guarantees to prevent inserting the same records multiple times. Re-executing the above cell would write the same records to the target table, resulting in duplicate records.
 
 -- COMMAND ----------
 
@@ -163,7 +171,7 @@ SELECT * FROM parquet.`${da.paths.datasets}/ecommerce/raw/sales-30m`
 -- MAGIC
 -- MAGIC ## Merge Updates
 -- MAGIC
--- MAGIC You can *upsert* data from a source table, view, or DataFrame into a target Delta table using the **`MERGE`** SQL operation. Delta Lake supports inserts, updates and deletes in **`MERGE`**, and supports extended syntax beyond the SQL standards to facilitate advanced use cases.
+-- MAGIC You can *`upsert`* data from a source table, view, or DataFrame into a target Delta table using the **`MERGE`** SQL operation. Delta Lake supports inserts, updates and deletes in **`MERGE`**, and supports extended syntax beyond the SQL standards to facilitate advanced use cases.
 -- MAGIC
 -- MAGIC <strong><code>
 -- MAGIC MERGE INTO target a<br/>
@@ -184,6 +192,10 @@ FROM parquet.`${da.paths.datasets}/ecommerce/raw/users-30m`
 
 -- COMMAND ----------
 
+SELECT * FROM users_update
+
+-- COMMAND ----------
+
 -- DBTITLE 0,--i18n-4732ea19-2857-45fe-9ca2-c2475015ef47
 -- MAGIC %md
 -- MAGIC
@@ -199,20 +211,19 @@ FROM parquet.`${da.paths.datasets}/ecommerce/raw/users-30m`
 
 -- COMMAND ----------
 
-SELECT * FROM users_update
-
--- COMMAND ----------
-
 MERGE INTO users a
 USING users_update b
-ON a.user_id = b.user_id
+  ON a.user_id = b.user_id
 WHEN MATCHED AND a.email IS NULL AND b.email IS NOT NULL THEN
   UPDATE SET email = b.email, updated = b.updated
-WHEN NOT MATCHED THEN INSERT *
+WHEN NOT MATCHED THEN INSERT *;
+
+
 
 -- COMMAND ----------
 
 SELECT * FROM users
+WHERE CAST(updated AS DATE) = current_date();
 
 -- COMMAND ----------
 
@@ -243,7 +254,7 @@ SELECT * FROM users
 MERGE INTO events a
 USING events_update b
 ON a.user_id = b.user_id AND a.event_timestamp = b.event_timestamp
-WHEN NOT MATCHED AND b.traffic_source = 'email' THEN 
+WHEN NOT MATCHED AND b.traffic_source = 'email' THEN
   INSERT *
 
 -- COMMAND ----------
@@ -254,7 +265,7 @@ WHEN NOT MATCHED AND b.traffic_source = 'email' THEN
 -- MAGIC  
 -- MAGIC ## Load Incrementally
 -- MAGIC
--- MAGIC **`COPY INTO`** provides SQL engineers an idempotent option to incrementally ingest data from external systems.
+-- MAGIC **`COPY INTO`** provides SQL engineers an *idempotent* option to incrementally ingest data from external systems.
 -- MAGIC
 -- MAGIC **Note** that this operation does have some expectations:
 -- MAGIC - Data **schema** should be **consistent**
@@ -262,13 +273,35 @@ WHEN NOT MATCHED AND b.traffic_source = 'email' THEN
 -- MAGIC
 -- MAGIC This operation is potentially much cheaper than full table scans for data that grows predictably.
 -- MAGIC
--- MAGIC While here we'll show simple execution on a static directory, the real value is in multiple executions over time picking up new files in the source automatically.
+-- MAGIC While here we'll show simple execution on a static directory, the real value is in multiple executions over time picking up new files in the source automatically.<br>
+-- MAGIC
+-- MAGIC **Idempotent Operations:**
+-- MAGIC an idempotent operation is one that can be applied multiple times without changing the result beyond the initial application. In other words, executing the operation once or multiple times will have the same effect as executing it just once.
 
 -- COMMAND ----------
 
 COPY INTO sales
 FROM "${da.paths.datasets}/ecommerce/raw/sales-30m"
 FILEFORMAT = PARQUET
+
+-- COMMAND ----------
+
+SELECT COUNT(*) FROM sales
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC If we run the same COPY INTO statement again no records will be affected or be inserted.
+
+-- COMMAND ----------
+
+COPY INTO sales
+FROM "${da.paths.datasets}/ecommerce/raw/sales-30m"
+FILEFORMAT = PARQUET
+
+-- COMMAND ----------
+
+SELECT COUNT(*) FROM sales
 
 -- COMMAND ----------
 

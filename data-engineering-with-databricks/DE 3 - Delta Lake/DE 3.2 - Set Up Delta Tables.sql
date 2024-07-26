@@ -15,7 +15,7 @@
 -- MAGIC
 -- MAGIC After extracting data from external data sources, load data into the Lakehouse to ensure that all of the benefits of the Databricks platform can be fully leveraged.
 -- MAGIC
--- MAGIC While different organizations may have varying policies for how data is initially loaded into Databricks, we typically recommend that early tables represent a mostly raw version of the data, and that validation and enrichment occur in later stages. This pattern ensures that even if data doesn't match expectations with regards to data types or column names, no data will be dropped, meaning that programmatic or manual intervention can still salvage data in a partially corrupted or invalid state.
+-- MAGIC While different organizations may have varying policies for how data is initially loaded into Databricks, **we typically recommend that early tables represent a mostly raw version of the data**, and that validation and enrichment occur in later stages. This pattern ensures that even if data doesn't match expectations with regards to data types or column names, no data will be dropped, meaning that programmatic or manual intervention can still salvage data in a partially corrupted or invalid state.
 -- MAGIC
 -- MAGIC This lesson will focus primarily on the pattern used to create most tables, **`CREATE TABLE _ AS SELECT`** (CTAS) statements.
 -- MAGIC
@@ -62,6 +62,10 @@ DESCRIBE EXTENDED sales;
 
 -- COMMAND ----------
 
+SELECT * FROM sales
+
+-- COMMAND ----------
+
 -- DBTITLE 0,--i18n-1d3d7f45-be4f-4459-92be-601e55ff0063
 -- MAGIC %md
 -- MAGIC
@@ -102,7 +106,7 @@ OPTIONS (
   delimiter = "|"
 );
 
-CREATE TABLE sales_delta AS
+CREATE OR REPLACE TABLE sales_delta AS
   SELECT * FROM sales_tmp_vw;
   
 SELECT * FROM sales_delta
@@ -175,7 +179,7 @@ SELECT * FROM purchases_vw
 -- MAGIC  
 -- MAGIC ## Declare Schema with Generated Columns
 -- MAGIC
--- MAGIC As noted previously, CTAS statements do not support schema declaration. We note above that the timestamp column appears to be some variant of a Unix timestamp, which may not be the most useful for our analysts to derive insights. This is a situation where generated columns would be beneficial.
+-- MAGIC As noted previously, CTAS statements do not support schema declaration. We note above that the timestamp column appears to be some variant of a Unix timestamp, which may not be the most useful for our analysts to derive insights. This is a situation where **generated columns** would be beneficial.
 -- MAGIC
 -- MAGIC Generated columns are a special type of column whose values are automatically generated based on a user-specified function over other columns in the Delta table (introduced in DBR 8.3).
 -- MAGIC
@@ -196,6 +200,10 @@ CREATE OR REPLACE TABLE purchase_dates (
   date DATE GENERATED ALWAYS AS (
     cast(cast(transaction_timestamp/1e6 AS TIMESTAMP) AS DATE))
     COMMENT "generated based on `transactions_timestamp` column")
+
+-- COMMAND ----------
+
+DESCRIBE purchase_dates
 
 -- COMMAND ----------
 
@@ -245,8 +253,8 @@ SELECT * FROM purchase_dates
 
 -- COMMAND ----------
 
---INSERT INTO purchase_dates VALUES
---(1, 600000000, 42.0, "2020-06-18")
+INSERT INTO purchase_dates VALUES
+(1, 600000000, 42.0, "2020-06-18")
 
 -- COMMAND ----------
 
@@ -286,6 +294,10 @@ DESCRIBE EXTENDED purchase_dates
 
 -- COMMAND ----------
 
+SHOW TBLPROPERTIES purchase_dates
+
+-- COMMAND ----------
+
 CREATE TABLE people10m (
   id INT NOT NULL,
   firstName STRING,
@@ -297,7 +309,7 @@ CREATE TABLE people10m (
   salary INT
 ) USING DELTA;
 
---ALTER TABLE people10m ALTER COLUMN middleName DROP NOT NULL;
+--ALTER TABLE people10m ALTER COLUMN middleName set NOT NULL;
 --ALTER TABLE people10m ALTER COLUMN ssn SET NOT NULL;
 
 -- COMMAND ----------
@@ -407,6 +419,15 @@ DEEP CLONE purchases
 
 -- COMMAND ----------
 
+DESCRIBE EXTENDED purchases
+
+-- COMMAND ----------
+
+-- MAGIC %python
+-- MAGIC dbutils.fs.ls("dbfs:/mnt/dbacademy-users/mehdi.darshi@outlook.com/data-engineer-learning-path/database.db/purchases_clone")
+
+-- COMMAND ----------
+
 -- DBTITLE 0,--i18n-c0aa62a8-7448-425c-b9de-45284ea87f8c
 -- MAGIC %md
 -- MAGIC
@@ -419,6 +440,11 @@ DEEP CLONE purchases
 
 CREATE OR REPLACE TABLE purchases_shallow_clone
 SHALLOW CLONE purchases
+
+-- COMMAND ----------
+
+-- MAGIC %python
+-- MAGIC dbutils.fs.ls("dbfs:/mnt/dbacademy-users/mehdi.darshi@outlook.com/data-engineer-learning-path/database.db/purchases_shallow_clone")
 
 -- COMMAND ----------
 

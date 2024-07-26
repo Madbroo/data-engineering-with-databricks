@@ -52,7 +52,7 @@
 
 -- COMMAND ----------
 
-CREATE SCHEMA IF NOT EXISTS ${da.schema_name}_default_location;
+CREATE SCHEMA IF NOT EXISTS ${da.schema_name}_default_location
 
 -- COMMAND ----------
 
@@ -83,10 +83,15 @@ DESCRIBE SCHEMA EXTENDED ${da.schema_name}_default_location;
 
 USE ${da.schema_name}_default_location;
 
-CREATE OR REPLACE TABLE managed_table (width INT, length INT, height INT);
-INSERT INTO managed_table 
-VALUES (3, 2, 1);
-SELECT * FROM managed_table;
+CREATE OR REPLACE TABLE managed_table (
+            width     INT,
+            length    INT,
+            height    INT
+  );
+INSERT INTO managed_table
+VALUES(3, 2 ,1);
+
+SELECT * FROM managed_table
 
 -- COMMAND ----------
 
@@ -95,6 +100,10 @@ SELECT * FROM managed_table;
 -- MAGIC
 -- MAGIC  
 -- MAGIC We can look at the extended table description to find the location (you'll need to scroll down in the results).
+
+-- COMMAND ----------
+
+DESCRIBE managed_table
 
 -- COMMAND ----------
 
@@ -112,7 +121,8 @@ DESCRIBE DETAIL managed_table;
 
 -- COMMAND ----------
 
--- MAGIC %python 
+-- MAGIC %python
+-- MAGIC
 -- MAGIC tbl_location = spark.sql(f"DESCRIBE DETAIL managed_table").first().location
 -- MAGIC print(tbl_location)
 -- MAGIC
@@ -150,11 +160,27 @@ DROP TABLE managed_table;
 
 -- MAGIC %md --i18n-0e4046c8-2c3a-4bab-a14a-516cc0f41eda
 -- MAGIC
--- MAGIC  
--- MAGIC ## External Tables
--- MAGIC Next, we will create an **external** (unmanaged) table from sample data. 
 -- MAGIC
--- MAGIC The data we are going to use are in CSV format. We want to create a Delta table with a **`LOCATION`** provided in the directory of our choice.
+-- MAGIC ## External Tables
+-- MAGIC Next, we will create an **external** (unmanaged) table from sample data.  
+-- MAGIC
+-- MAGIC The data we are going to use are in CSV format. We want to create a Delta table with a **`LOCATION`** provided in the directory of our choice. <br>
+-- MAGIC <br>
+-- MAGIC
+-- MAGIC
+-- MAGIC ## Graphical Representation of relationships
+-- MAGIC The following diagram describes the relationship between:
+-- MAGIC
+-- MAGIC - storage credentials
+-- MAGIC - external locations
+-- MAGIC - external tables
+-- MAGIC - storage paths
+-- MAGIC - IAM entities
+-- MAGIC - Azure service accounts<br>
+-- MAGIC [Source](https://docs.databricks.com/en/sql/language-manual/sql-ref-external-tables.html#external-tables)
+-- MAGIC
+-- MAGIC <Img src="https://docs.databricks.com/en/_images/external-location-er-diagram.png"/>
+-- MAGIC
 
 -- COMMAND ----------
 
@@ -168,7 +194,7 @@ CREATE OR REPLACE TEMPORARY VIEW temp_delays USING CSV OPTIONS (
 CREATE OR REPLACE TABLE external_table LOCATION '${da.paths.working_dir}/external_table' AS
   SELECT * FROM temp_delays;
 
-SELECT * FROM external_table; 
+SELECT * FROM external_table;
 
 -- COMMAND ----------
 
@@ -181,6 +207,20 @@ SELECT * FROM external_table;
 -- COMMAND ----------
 
 DESCRIBE TABLE EXTENDED external_table;
+
+-- COMMAND ----------
+
+DESCRIBE DETAIL external_table
+
+-- COMMAND ----------
+
+-- MAGIC %python
+-- MAGIC
+-- MAGIC tbl_location = spark.sql(f"DESCRIBE DETAIL external_table").first().location
+-- MAGIC print(tbl_location)
+-- MAGIC
+-- MAGIC files = dbutils.fs.ls(tbl_location)
+-- MAGIC display(files)
 
 -- COMMAND ----------
 
@@ -216,6 +256,8 @@ DROP TABLE external_table;
 -- MAGIC
 -- MAGIC ## Clean up
 -- MAGIC Drop the schema.
+-- MAGIC
+-- MAGIC **NOTE**: If a schema (database) is registered in your workspace-level Hive metastore, dropping that schema using the **CASCADE** option causes all files in that schema location to be deleted recursively, *regardless of the table type (managed or external).*
 
 -- COMMAND ----------
 
